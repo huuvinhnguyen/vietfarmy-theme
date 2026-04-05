@@ -1594,3 +1594,15 @@
     $.Gema.init();
 
 })(jQuery);
+
+/* =============================================
+   COFFEE NEW - MOBILE MENU TOGGLE
+   ============================================= */
+(function($) {
+    $(document).ready(function() {
+        $('.menu-toggle').on('click', function() {
+            $(this).toggleClass('active');
+            $('#primary-menu').toggleClass('active');
+        });
+    });
+})(jQuery);
