@@ -10,6 +10,129 @@
 // Include Featured Image from URL
 require_once get_template_directory() . '/assets/php/featured-image-from-url.php';
 
+// ============================================================
+// SẢN PHẨM TỪ URL — Dùng chung key: _vietfarmy_product_image_url
+// ============================================================
+
+// 1. BỎ ảnh mặc định của WooCommerce (cả shop lẫn single)
+// -----------------------------------------------
+remove_action('woocommerce_before_shop_loop_item_title', 'woocommerce_template_loop_product_thumbnail', 10);
+
+// 2. Thêm Meta Box nhập URL vào trang Edit Product
+// -----------------------------------------------
+add_action('add_meta_boxes', 'vietfarmy_add_url_meta_box');
+
+function vietfarmy_add_url_meta_box() {
+    add_meta_box(
+        'vietfarmy_url_image',
+        'Ảnh sản phẩm từ URL',
+        'vietfarmy_url_meta_box_callback',
+        'product',
+        'side',
+        'low'
+    );
+}
+
+function vietfarmy_url_meta_box_callback($post) {
+    wp_nonce_field('vietfarmy_url_save', 'vietfarmy_url_nonce');
+    $url = get_post_meta($post->ID, '_vietfarmy_product_image_url', true);
+    ?>
+    <div class="vietfarmy-url-box">
+        <label for="vietfarmy_product_image_url" style="display:block;font-weight:600;margin-bottom:8px;">
+            Đường dẫn ảnh sản phẩm:
+        </label>
+        <input type="url"
+               id="vietfarmy_product_image_url"
+               name="vietfarmy_product_image_url"
+               value="<?php echo esc_url($url); ?>"
+               placeholder="https://example.com/image.jpg"
+               style="width:100%;padding:8px 10px;box-sizing:border-box;">
+        <?php if ($url) : ?>
+            <div style="margin-top:10px;background:#f0f0f1;padding:10px;border-radius:4px;">
+                <img src="<?php echo esc_url($url); ?>" alt="Preview" style="width:100%;border-radius:4px;">
+            </div>
+        <?php endif; ?>
+        <p style="font-size:12px;color:#646970;margin-top:8px;">
+            Dán link ảnh vào ô trên và Lưu sản phẩm.
+        </p>
+    </div>
+    <?php
+}
+
+// 3. Lưu URL khi save product
+// -----------------------------------------------
+add_action('save_post_product', 'vietfarmy_save_url_meta');
+
+function vietfarmy_save_url_meta($post_id) {
+    if (!isset($_POST['vietfarmy_url_nonce']) || !wp_verify_nonce($_POST['vietfarmy_url_nonce'], 'vietfarmy_url_save')) {
+        return;
+    }
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    if (isset($_POST['vietfarmy_product_image_url'])) {
+        update_post_meta($post_id, '_vietfarmy_product_image_url', esc_url_raw($_POST['vietfarmy_product_image_url']));
+    }
+}
+
+// 4. Hiển thị ảnh từ URL — Trang danh sách (shop/archive)
+// Chạy ở priority 9, thấp hơn default 10, nên in TRƯỚC ảnh mặc định
+// -----------------------------------------------
+add_action('woocommerce_before_shop_loop_item_title', 'vietfarmy_show_url_image_shop', 9);
+
+function vietfarmy_show_url_image_shop() {
+    global $product;
+    if (!$product) return;
+
+    $url = get_post_meta($product->get_id(), '_vietfarmy_product_image_url', true);
+    if ($url) {
+        echo '<div class="vietfarmy-product-image">' .
+             '<img src="' . esc_url($url) . '" alt="' . esc_attr($product->get_name()) . '">' .
+             '</div>';
+    }
+}
+
+// 5. Hiển thị ảnh từ URL — Trang chi tiết sản phẩm
+// Bỏ ảnh mặc định + inject ảnh URL ngay trong hook đúng vị trí
+// -----------------------------------------------
+add_filter('woocommerce_single_product_image_thumbnail_html', 'vietfarmy_replace_single_image_html', 20, 2);
+
+function vietfarmy_replace_single_image_html($html, $post_thumbnail_id) {
+    if (!is_product()) return $html;
+
+    global $product;
+    $url = get_post_meta($product->get_id(), '_vietfarmy_product_image_url', true);
+    if ($url) {
+        return '<div class="vietfarmy-product-image-single">' .
+               '<img src="' . esc_url($url) . '" alt="' . esc_attr($product->get_name()) . '">' .
+               '</div>';
+    }
+    return $html;
+}
+
+// 6. CSS căn chỉnh
+// -----------------------------------------------
+add_action('wp_head', 'vietfarmy_url_image_css');
+
+function vietfarmy_url_image_css() {
+    if (is_product() || is_shop() || is_product_category() || is_front_page()) {
+        echo '<style>
+            .vietfarmy-product-image img,
+            .vietfarmy-product-image-single img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+            .vietfarmy-product-image {
+                margin-bottom: 12px;
+            }
+        </style>';
+    }
+}
+
 if ( ! function_exists( 'gema_setup' ) ) :/**
 	 * Sets up theme defaults and registers support for various WordPress features.
 	 *
