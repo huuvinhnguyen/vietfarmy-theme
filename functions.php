@@ -37,33 +37,69 @@ function vietfarmy_url_meta_box_callback($post) {
     wp_nonce_field('vietfarmy_url_save', 'vietfarmy_url_nonce');
     $url = get_post_meta($post->ID, '_vietfarmy_product_image_url', true);
     ?>
+    <style>
+        .vietfarmy-url-box { background: #fff; padding: 4px; }
+        .vietfarmy-url-box .url-input-row { display: flex; gap: 6px; align-items: center; }
+        .vietfarmy-url-box input[type="url"] { flex: 1; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .vietfarmy-url-box input[type="url"]:focus { border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1; outline: none; }
+        .vietfarmy-url-box .btn-save-url {
+            background: #2271b1; color: #fff; border: none; padding: 8px 16px;
+            border-radius: 4px; cursor: pointer; font-size: 13px; white-space: nowrap;
+        }
+        .vietfarmy-url-box .btn-save-url:hover { background: #135e96; }
+        .vietfarmy-url-box .preview-box {
+            margin-top: 10px; background: #f0f0f1; padding: 8px; border-radius: 4px; text-align: center;
+        }
+        .vietfarmy-url-box .preview-box img { max-width: 100%; border-radius: 4px; border: 1px solid #ddd; }
+        .vietfarmy-url-box .hint { font-size: 12px; color: #646970; margin-top: 8px; }
+    </style>
     <div class="vietfarmy-url-box">
-        <label for="vietfarmy_product_image_url" style="display:block;font-weight:600;margin-bottom:8px;">
-            Đường dẫn ảnh sản phẩm:
-        </label>
-        <input type="url"
-               id="vietfarmy_product_image_url"
-               name="vietfarmy_product_image_url"
-               value="<?php echo esc_url($url); ?>"
-               placeholder="https://example.com/image.jpg"
-               style="width:100%;padding:8px 10px;box-sizing:border-box;">
+        <div class="url-input-row">
+            <input type="url"
+                   id="vietfarmy_product_image_url"
+                   name="vietfarmy_product_image_url"
+                   value="<?php echo esc_url($url); ?>"
+                   placeholder="https://example.com/image.jpg">
+            <button type="button" class="btn-save-url" id="vietfarmy_save_url_btn">Lưu URL</button>
+        </div>
+
         <?php if ($url) : ?>
-            <div style="margin-top:10px;background:#f0f0f1;padding:10px;border-radius:4px;">
-                <img src="<?php echo esc_url($url); ?>" alt="Preview" style="width:100%;border-radius:4px;">
+            <div class="preview-box">
+                <img src="<?php echo esc_url($url); ?>" alt="Preview">
             </div>
         <?php endif; ?>
-        <p style="font-size:12px;color:#646970;margin-top:8px;">
-            Dán link ảnh vào ô trên và Lưu sản phẩm.
-        </p>
+
+        <p class="hint">📎 Dán link ảnh → nhấn <strong>Lưu URL</strong> hoặc dùng nút <strong>Xuất bản/Cập nhật</strong> của WordPress.</p>
     </div>
+
+    <script>
+    (function(){
+        var btn = document.getElementById('vietfarmy_save_url_btn');
+        if (!btn) return;
+        btn.addEventListener('click', function(){
+            var input = document.getElementById('vietfarmy_product_image_url');
+            if (!input || !input.value) return;
+            // submit form
+            var form = btn.closest('form');
+            if (form) {
+                // ensure the input is enabled before submit
+                input.disabled = false;
+                form.submit();
+            }
+        });
+    })();
+    </script>
     <?php
 }
 
 // 3. Lưu URL khi save product
 // -----------------------------------------------
-add_action('save_post_product', 'vietfarmy_save_url_meta');
+add_action('save_post', 'vietfarmy_save_url_meta');
 
 function vietfarmy_save_url_meta($post_id) {
+    // Chỉ chạy cho product post type
+    if (get_post_type($post_id) !== 'product') return;
+
     if (!isset($_POST['vietfarmy_url_nonce']) || !wp_verify_nonce($_POST['vietfarmy_url_nonce'], 'vietfarmy_url_save')) {
         return;
     }
