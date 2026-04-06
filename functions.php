@@ -169,6 +169,219 @@ function vietfarmy_url_image_css() {
     }
 }
 
+// ============================================================
+// ALBUM ẢNH SẢN PHẨM TỪ URL
+// ============================================================
+
+// 7. Meta Box Album URL
+// -----------------------------------------------
+add_action('add_meta_boxes', 'vietfarmy_add_gallery_meta_box');
+
+function vietfarmy_add_gallery_meta_box() {
+    add_meta_box(
+        'vietfarmy_gallery_urls',
+        'Album ảnh sản phẩm từ URL',
+        'vietfarmy_gallery_meta_box_callback',
+        'product',
+        'side',
+        'low'
+    );
+}
+
+function vietfarmy_gallery_meta_box_callback($post) {
+    wp_nonce_field('vietfarmy_gallery_save', 'vietfarmy_gallery_nonce');
+    $gallery_urls = get_post_meta($post->ID, '_vietfarmy_product_gallery_urls', true);
+    if (!is_array($gallery_urls)) $gallery_urls = array();
+    ?>
+    <style>
+        .vngallery-box { background: #fff; padding: 4px; }
+        .vngallery-box .vngallery-input-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+        .vngallery-box input[type="url"] { flex: 1; padding: 7px 9px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+        .vngallery-box input[type="url"]:focus { border-color: #2271b1; outline: none; }
+        .vngallery-box .btn-add-url {
+            background: #2271b1; color: #fff; border: none; padding: 7px 14px;
+            border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;
+        }
+        .vngallery-box .btn-add-url:hover { background: #135e96; }
+        .vngallery-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .vngallery-item { position: relative; width: 60px; height: 60px; border-radius: 4px; overflow: hidden; border: 1px solid #ddd; background: #f0f0f1; }
+        .vngallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .vngallery-item .btn-remove-url {
+            position: absolute; top: 0; right: 0; background: rgba(220,53,69,.85);
+            color: #fff; border: none; width: 18px; height: 18px;
+            border-radius: 0 0 0 4px; cursor: pointer; font-size: 10px;
+            line-height: 18px; text-align: center; padding: 0;
+        }
+        .vngallery-item .btn-remove-url:hover { background: #dc3545; }
+        .vngallery-empty { font-size: 12px; color: #999; padding: 8px 0; }
+        .vngallery-hint { font-size: 11px; color: #646970; margin-top: 6px; line-height: 1.4; }
+        .vngallery-hint strong { color: #444; }
+    </style>
+
+    <div class="vngallery-box">
+        <div class="vngallery-input-row">
+            <input type="url" id="vngallery_url_input" placeholder="https://example.com/image.jpg">
+            <button type="button" class="btn-add-url" id="vngallery_add_btn">+ Thêm</button>
+        </div>
+
+        <div class="vngallery-list" id="vngallery_list">
+            <?php foreach ($gallery_urls as $index => $img_url) : ?>
+                <div class="vngallery-item" data-index="<?php echo $index; ?>">
+                    <img src="<?php echo esc_url($img_url); ?>" alt="Thumbnail">
+                    <button type="button" class="btn-remove-url" title="Xóa">×</button>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <?php if (empty($gallery_urls)) : ?>
+            <div class="vngallery-empty" id="vngallery_empty">Chưa có ảnh nào.</div>
+        <?php endif; ?>
+
+        <p class="vngallery-hint">📎 Dán URL ảnh → nhấn <strong>+ Thêm</strong> → nhấn <strong>Cập nhật</strong> sản phẩm để lưu.</p>
+    </div>
+
+    <!-- Hidden input lưu danh sách URL -->
+    <input type="hidden" id="vngallery_urls_json" name="vietfarmy_product_gallery_urls_json" value='<?php echo esc_attr(json_encode($gallery_urls)); ?>'>
+
+    <script>
+    (function(){
+        var input = document.getElementById('vngallery_url_input');
+        var list = document.getElementById('vngallery_list');
+        var hiddenInput = document.getElementById('vngallery_urls_json');
+        var emptyMsg = document.getElementById('vngallery_empty');
+
+        function getUrls() {
+            try { return JSON.parse(hiddenInput.value || '[]'); }
+            catch(e) { return []; }
+        }
+
+        function saveUrls(urls) {
+            hiddenInput.value = JSON.stringify(urls);
+            renderList(urls);
+        }
+
+        function renderList(urls) {
+            if (!list) return;
+            list.innerHTML = '';
+            if (emptyMsg) emptyMsg.style.display = urls.length ? 'none' : 'block';
+            urls.forEach(function(url, i) {
+                var item = document.createElement('div');
+                item.className = 'vngallery-item';
+                item.setAttribute('data-index', i);
+                item.innerHTML = '<img src="' + url + '" alt="Thumb"><button type="button" class="btn-remove-url" title="Xóa">×</button>';
+                list.appendChild(item);
+            });
+        }
+
+        // Thêm ảnh
+        document.getElementById('vngallery_add_btn').addEventListener('click', function() {
+            var val = input.value.trim();
+            if (!val) return;
+            var urls = getUrls();
+            urls.push(val);
+            saveUrls(urls);
+            input.value = '';
+            input.focus();
+        });
+
+        // Enter key
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vngallery_add_btn').click(); }
+        });
+
+        // Xóa ảnh (delegation)
+        list.addEventListener('click', function(e) {
+            var btn = e.target.closest('.btn-remove-url');
+            if (!btn) return;
+            var item = btn.closest('.vngallery-item');
+            var idx = parseInt(item.getAttribute('data-index'), 10);
+            var urls = getUrls();
+            urls.splice(idx, 1);
+            saveUrls(urls);
+        });
+
+        // Lưu JSON vào hidden input trước submit
+        document.querySelector('form#post').addEventListener('submit', function() {
+            var urls = getUrls();
+            hiddenInput.value = JSON.stringify(urls);
+        });
+    })();
+    </script>
+    <?php
+}
+
+// 8. Lưu Album URL khi save product
+// -----------------------------------------------
+add_action('save_post', 'vietfarmy_save_gallery_meta');
+
+function vietfarmy_save_gallery_meta($post_id) {
+    if (get_post_type($post_id) !== 'product') return;
+    if (!isset($_POST['vietfarmy_gallery_nonce']) || !wp_verify_nonce($_POST['vietfarmy_gallery_nonce'], 'vietfarmy_gallery_save')) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    if (isset($_POST['vietfarmy_product_gallery_urls_json'])) {
+        $json = stripslashes($_POST['vietfarmy_product_gallery_urls_json']);
+        $urls = json_decode($json, true);
+        if (is_array($urls)) {
+            $urls = array_map('esc_url_raw', $urls);
+            update_post_meta($post_id, '_vietfarmy_product_gallery_urls', $urls);
+        }
+    }
+}
+
+// 9. Hiển thị Album URL trên trang chi tiết sản phẩm (gallery)
+// -----------------------------------------------
+add_filter('woocommerce_single_product_image_thumbnail_html', 'vietfarmy_replace_gallery_html', 20, 2);
+
+function vietfarmy_replace_gallery_html($html, $post_thumbnail_id) {
+    if (!is_product()) return $html;
+
+    global $product;
+    $gallery_urls = get_post_meta($product->get_id(), '_vietfarmy_product_gallery_urls', true);
+
+    // Nếu không có gallery URL, giữ nguyên ảnh mặc định
+    if (empty($gallery_urls) || !is_array($gallery_urls)) return $html;
+
+    // Thay toàn bộ gallery bằng ảnh từ URL
+    $main_url = get_post_meta($product->get_id(), '_vietfarmy_product_image_url', true);
+    $output = '';
+
+    // Ảnh chính (lấy từ main URL nếu có, không thì lấy ảnh mặc định)
+    if ($main_url) {
+        $output .= '<div class="vietfarmy-product-image-single woocommerce-product-gallery__image">' .
+                   '<img src="' . esc_url($main_url) . '" alt="' . esc_attr($product->get_name()) . '"></div>';
+    }
+
+    // Ảnh gallery
+    foreach ($gallery_urls as $url) {
+        $output .= '<div class="vietfarmy-gallery-image woocommerce-product-gallery__image">' .
+                   '<img src="' . esc_url($url) . '" alt="' . esc_attr($product->get_name()) . '"></div>';
+    }
+
+    return $output;
+}
+
+// 10. CSS cho album gallery
+// -----------------------------------------------
+add_action('wp_head', 'vietfarmy_gallery_css');
+
+function vietfarmy_gallery_css() {
+    if (is_product()) {
+        echo '<style>
+            .vietfarmy-gallery-image img,
+            .vietfarmy-product-image-single img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+            .vietfarmy-gallery-image {
+                margin-top: 8px;
+            }
+        </style>';
+    }
+}
+
 if ( ! function_exists( 'gema_setup' ) ) :/**
 	 * Sets up theme defaults and registers support for various WordPress features.
 	 *
