@@ -377,3 +377,17 @@ add_filter( 'wupdates_gather_ids', 'gema_wupdates_add_id_ML4Gm', 10, 1 );
 * Various plugins integrations.
 */
 require get_template_directory() . '/inc/integrations.php';
+
+// Tự động lấy ảnh từ URL trong Custom Field làm ảnh sản phẩm
+add_action('woocommerce_before_shop_loop_item_title', 'vietfarmy_display_url_image', 10);
+add_action('woocommerce_before_single_product_summary', 'vietfarmy_display_url_image', 10);
+
+function vietfarmy_display_url_image() {
+    global $post;
+    $image_url = get_post_meta($post->ID, 'fifu_image_url', true);
+    if ($image_url) {
+        echo '<div class="product-image-url"><img src="' . esc_url($image_url) . '" alt="' . get_the_title() . '" style="width:100%; height:auto;"></div>';
+        // Ẩn ảnh mặc định của WC nếu cần
+        remove_action('woocommerce_before_shop_loop_item_title', 'woocommerce_template_loop_product_thumbnail', 10);
+    }
+}
