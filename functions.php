@@ -382,15 +382,29 @@ add_filter( 'wupdates_gather_ids', 'gema_wupdates_add_id_ML4Gm', 10, 1 );
 require get_template_directory() . '/inc/integrations.php';
 
 // Tự động lấy ảnh từ URL trong Custom Field làm ảnh sản phẩm
-add_action('woocommerce_before_shop_loop_item_title', 'vietfarmy_display_url_image', 10);
-add_action('woocommerce_before_single_product_summary', 'vietfarmy_display_url_image', 10);
 
-function vietfarmy_display_url_image() {
+// Trang danh sách sản phẩm (archive/shop): bỏ ảnh mặc định, thay bằng URL
+remove_action('woocommerce_before_shop_loop_item_title', 'woocommerce_template_loop_product_thumbnail', 10);
+add_action('woocommerce_before_shop_loop_item_title', 'vietfarmy_display_url_image_archive', 9);
+function vietfarmy_display_url_image_archive() {
     global $post;
     $image_url = get_post_meta($post->ID, 'fifu_image_url', true);
     if ($image_url) {
-        echo '<div class="product-image-url"><img src="' . esc_url($image_url) . '" alt="' . get_the_title() . '" style="width:100%; height:auto;"></div>';
-        // Ẩn ảnh mặc định của WC nếu cần
-        remove_action('woocommerce_before_shop_loop_item_title', 'woocommerce_template_loop_product_thumbnail', 10);
+        echo '<div class="product-image-url"><img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '"></div>';
+    }
+}
+
+// Trang chi tiết sản phẩm: ẩn ảnh mặc định, hiện ảnh từ URL
+add_action('wp_head', 'vietfarmy_hide_default_single_image');
+function vietfarmy_hide_default_single_image() {
+    if (!is_singular('product')) return;
+    echo '<style>.woocommerce-product-gallery { display: none !important; }</style>';
+}
+add_action('woocommerce_before_single_product_summary', 'vietfarmy_display_url_image_single', 5);
+function vietfarmy_display_url_image_single() {
+    global $post;
+    $image_url = get_post_meta($post->ID, 'fifu_image_url', true);
+    if ($image_url) {
+        echo '<div class="product-image-url"><img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '" style="width:100%; height:auto;"></div>';
     }
 }
