@@ -7,6 +7,9 @@
  * @package Gema
  */
 
+// Include Featured Image from URL
+require_once get_template_directory() . '/assets/php/featured-image-from-url.php';
+
 if ( ! function_exists( 'gema_setup' ) ) :/**
 	 * Sets up theme defaults and registers support for various WordPress features.
 	 *
