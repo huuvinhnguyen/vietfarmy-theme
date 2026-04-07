@@ -42,8 +42,10 @@
 </div>
 
 <style>
-/* Ẩn mobile-header-wrapper gốc của Gema (đã có header mới của VietFarmy) */
-.mobile-header-wrapper { display: none !important; }
+/* Reset — bỏ khoảng trắng phía trên */
+#page { margin: 0 !important; padding: 0 !important; }
+#content { margin: 0 !important; padding: 0 !important; }
+.mobile-header-wrapper { display: none !important; height: 0 !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
 </style>
 
 <div id="page" class="site">
@@ -66,7 +68,7 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
     border-bottom: 2px solid #2d6a4f;
     position: sticky;
     top: 0;
-    z-index: 999;
+    z-index: 100000;
 }
 .vnf-header-bar {
     display: flex; align-items: center; justify-content: space-between;
@@ -92,13 +94,15 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
 
 /* ── Mobile (<= 768px) ── */
 @media (max-width: 768px) {
-    .vnf-header { position: relative; margin-top: 0; }
-    .vnf-header-bar { height: 54px; padding: 0 16px; gap: 8px; }
+    /* Reset triệt để — bỏ khoảng trắng */
+    .vnf-header { position: relative; margin: 0 !important; padding: 0 !important; }
+    .vnf-header-bar { height: 52px; padding: 0 12px !important; gap: 6px; margin: 0 !important; border-radius: 0 !important; }
+    .vnf-header-bar > * { margin: 0 !important; }
 
-    /* Logo trái — Hamburger phải */
-    .vnf-logo { flex-shrink: 0; }
-    .vnf-logo img { height: 36px; }
-    .vnf-logo-text { font-size: 16px; }
+    /* Logo trái */
+    .vnf-logo { flex-shrink: 0; margin: 0 !important; }
+    .vnf-logo img { height: 34px; }
+    .vnf-logo-text { font-size: 15px; }
 
     /* Ẩn menu ngang */
     .vnf-nav { display: none; }
@@ -106,8 +110,8 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
     /* Hamburger — đẩy sang phải */
     .vnf-hamburger {
         display: flex; flex-direction: column; justify-content: center;
-        align-items: center; width: 40px; height: 40px; cursor: pointer;
-        background: none; border: none; padding: 8px; border-radius: 6px;
+        align-items: center; width: 38px; height: 38px; cursor: pointer;
+        background: none; border: none; padding: 6px; border-radius: 6px;
         transition: background .2s; margin-left: auto; flex-shrink: 0;
     }
     .vnf-hamburger:hover { background: #f0f0f0; }
@@ -148,6 +152,10 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
     }
     .vnf-drawer-nav li a:hover { background: #f8f8f8; color: #2d6a4f; }
     .vnf-drawer-nav li:last-child a { border-bottom: none; }
+
+    /* Banner full width */
+    .vnf-banner { margin: 0 !important; padding: 0 !important; }
+    .vnf-banner img { width: 100%; max-height: none !important; border-radius: 0 !important; }
 }
 </style>
 
