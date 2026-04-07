@@ -642,13 +642,13 @@ function vietfarmy_product_gallery_slider() {
             lbImg.dataset.idx = idx;
             updateLBCounter();
             lb.classList.add('open');
-            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
         }
 
         function closeLightbox() {
             if (!lb) return;
             lb.classList.remove('open');
-            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
         }
 
         function lbSetImage(idx) {
