@@ -92,7 +92,7 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
 
 /* ── Mobile (<= 768px) ── */
 @media (max-width: 768px) {
-    .vnf-header { position: relative; }
+    .vnf-header { position: relative; margin-top: 0; }
     .vnf-header-bar { height: 54px; padding: 0 16px; gap: 8px; }
 
     /* Logo trái — Hamburger phải */
