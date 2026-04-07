@@ -78,6 +78,13 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
 .vnf-banner img { width: 100%; height: auto; max-height: 380px; object-fit: cover; display: block; }
 .vnf-banner a { display: block; }
 
+/* ── Mobile drawer — mặc định ẩn trên mọi màn hình ── */
+.vnf-overlay { display: none; }
+.vnf-drawer { display: none; }
+.vnf-hamburger { display: none; }
+.vnf-overlay.open { display: block; opacity: 1; }
+.vnf-drawer.open { display: block; }
+
 /* ── Mobile (<= 768px) ── */
 @media (max-width: 768px) {
     .vnf-header { position: relative; }
@@ -129,11 +136,12 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
         justify-content: center; color: #666;
     }
     .vnf-drawer-close:hover { background: #f0f0f0; }
-    .vnf-drawer-nav a {
+    .vnf-drawer-nav li a {
         display: block; padding: 14px 20px; color: #333; text-decoration: none;
         font-size: 15px; border-bottom: 1px solid #f0f0f0; transition: all .2s;
     }
-    .vnf-drawer-nav a:hover { background: #f8f8f8; color: #2d6a4f; }
+    .vnf-drawer-nav li a:hover { background: #f8f8f8; color: #2d6a4f; }
+    .vnf-drawer-nav li:last-child a { border-bottom: none; }
     .vnf-drawer-nav a:last-child { border-bottom: none; }
 }
 </style>
