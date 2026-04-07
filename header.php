@@ -62,6 +62,20 @@ $banner_link = get_theme_mod('vnf_header_banner_link', home_url('/'));
 $menu_shortcode = get_theme_mod('vnf_header_menu', '');
 ?>
 <style>
+/* Reset — loại bỏ style theme Gema can thiệp menu */
+.vnf-nav, .vnf-drawer-nav {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.vnf-nav li, .vnf-drawer-nav li {
+    list-style: none !important;
+}
+.vnf-nav a, .vnf-drawer-nav a {
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
 /* ── Desktop ── */
 .vnf-header {
     background: #fff;
@@ -76,9 +90,11 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
 }
 .vnf-logo img { height: 44px; width: auto; display: block; }
 .vnf-logo-text { font-size: 18px; font-weight: 700; color: #2d6a4f; text-decoration: none; }
-.vnf-nav { flex: 1; display: flex; justify-content: center; gap: 2px; }
+.vnf-nav {
+    flex: 1; justify-content: center; gap: 2px; flex-wrap: wrap;
+}
 .vnf-nav a {
-    padding: 8px 16px; color: #333; text-decoration: none;
+    display: block; padding: 8px 16px; color: #333;
     font-size: 14px; border-radius: 6px; transition: all .2s; font-weight: 500;
 }
 .vnf-nav a:hover, .vnf-nav a.current-menu-item { background: #2d6a4f; color: #fff; }
@@ -179,19 +195,17 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
 
         <!-- Menu Desktop -->
         <nav class="vnf-nav">
-            <?php if ($menu_shortcode) : ?>
-                <?php echo do_shortcode($menu_shortcode); ?>
-            <?php else : ?>
-                <?php wp_nav_menu(array(
+            <?php
+            if ($menu_shortcode) {
+                echo do_shortcode($menu_shortcode);
+            } else {
+                wp_nav_menu(array(
                     'theme_location' => 'primary',
                     'container' => false,
-                    'items_wrap' => '%3$s',
-                    'fallback_cb' => function() {
-                        echo '<a href="'.esc_url(home_url('/')).'">Trang chủ</a>';
-                        echo '<a href="'.esc_url(get_permalink(wc_get_page_id('shop'))).'">Sản phẩm</a>';
-                    }
-                )); ?>
-            <?php endif; ?>
+                    'fallback_cb' => false,
+                ));
+            }
+            ?>
         </nav>
 
         <!-- Hamburger (mobile) -->
@@ -220,11 +234,17 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
         <button class="vnf-drawer-close" id="vnf_close">&#10005;</button>
     </div>
     <nav class="vnf-drawer-nav">
-        <?php if ($menu_shortcode) : ?>
-            <?php echo do_shortcode($menu_shortcode); ?>
-        <?php else : ?>
-            <?php wp_nav_menu(array('theme_location' => 'primary', 'container' => false, 'items_wrap' => '%3$s')); ?>
-        <?php endif; ?>
+        <?php
+        if ($menu_shortcode) {
+            echo do_shortcode($menu_shortcode);
+        } else {
+            wp_nav_menu(array(
+                'theme_location' => 'primary',
+                'container' => false,
+                'fallback_cb' => false,
+            ));
+        }
+        ?>
     </nav>
 </div>
 
