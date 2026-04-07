@@ -114,6 +114,66 @@ function vietfarmy_save_url_meta($post_id) {
     }
 }
 
+// ============================================================
+// FEATURED IMAGE COLUMN TRONG ADMIN PRODUCT LIST
+// ============================================================
+
+// 4a. Thêm cột "Hình ảnh" vào danh sách sản phẩm
+// -----------------------------------------------
+add_filter('manage_edit-product_columns', 'vietfarmy_add_image_column');
+
+function vietfarmy_add_image_column($columns) {
+    $new_columns = array();
+    foreach ($columns as $key => $value) {
+        $new_columns[$key] = $value;
+        // Chèn cột "Hình ảnh" ngay sau cột "Tên"
+        if ($key === 'name') {
+            $new_columns['vietfarmy_product_image'] = 'Hình ảnh';
+        }
+    }
+    return $new_columns;
+}
+
+// 4b. Hiển thị thumbnail trong cột — ưu tiên: URL > Featured Image > Placeholder
+// -----------------------------------------------
+add_action('manage_product_posts_custom_column', 'vietfarmy_render_image_column', 10, 2);
+
+function vietfarmy_render_image_column($column, $post_id) {
+    if ($column !== 'vietfarmy_product_image') return;
+
+    $product = wc_get_product($post_id);
+    if (!$product) return;
+
+    // 1. Ưu tiên: Ảnh từ URL
+    $url_image = get_post_meta($post_id, '_vietfarmy_product_image_url', true);
+
+    // 2. Fallback: Featured Image của sản phẩm
+    $featured_id = $product->get_image_id();
+
+    if ($url_image) {
+        $img_src = esc_url($url_image);
+    } elseif ($featured_id) {
+        $img_src = wp_get_attachment_image_url($featured_id, array(60, 60));
+    } else {
+        $img_src = wc_placeholder_img_src(array(60, 60));
+    }
+
+    echo '<img src="' . $img_src . '" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd;">';
+}
+
+// 4c. CSS cho cột trong admin
+// -----------------------------------------------
+add_action('admin_head', 'vietfarmy_admin_image_column_css');
+
+function vietfarmy_admin_image_column_css() {
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'edit-product') return;
+    echo '<style>
+        .column-vietfarmy_product_image { width: 80px; }
+        .column-vietfarmy_product_image img { width:60px !important; height:60px !important; }
+    </style>';
+}
+
 // 4. Hiển thị ảnh từ URL — Trang danh sách (shop/archive)
 // Chạy ở priority 9, thấp hơn default 10, nên in TRƯỚC ảnh mặc định
 // -----------------------------------------------
