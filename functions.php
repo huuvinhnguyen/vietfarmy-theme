@@ -1107,3 +1107,75 @@ add_filter( 'wupdates_gather_ids', 'gema_wupdates_add_id_ML4Gm', 10, 1 );
 * Various plugins integrations.
 */
 require get_template_directory() . '/inc/integrations.php';
+
+// ============================================================
+// CUSTOMIZER — Header Zone (VietFarmy)
+// ============================================================
+add_action('customize_register', 'vnf_customize_register');
+
+function vnf_customize_register($wp_customize) {
+
+    $wp_customize->add_section('vnf_header', array(
+        'title'    => 'Header Zone (VietFarmy)',
+        'priority' => 30,
+    ));
+
+    // Logo
+    $wp_customize->add_setting('vnf_header_logo', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'esc_url_raw',
+    ));
+    $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, 'vnf_header_logo', array(
+        'label'    => 'Logo',
+        'section'  => 'vnf_header',
+    )));
+
+    // Banner
+    $wp_customize->add_setting('vnf_header_banner', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'esc_url_raw',
+    ));
+    $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, 'vnf_header_banner', array(
+        'label'    => 'Banner',
+        'section'  => 'vnf_header',
+    )));
+
+    // Show banner
+    $wp_customize->add_setting('vnf_header_show_banner', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'absint',
+    ));
+    $wp_customize->add_control('vnf_header_show_banner', array(
+        'label'    => 'Hiển thị Banner',
+        'section'  => 'vnf_header',
+        'type'     => 'checkbox',
+    ));
+
+    // Banner link
+    $wp_customize->add_setting('vnf_header_banner_link', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'esc_url_raw',
+    ));
+    $wp_customize->add_control('vnf_header_banner_link', array(
+        'label'    => 'Liên kết Banner (URL)',
+        'section'  => 'vnf_header',
+        'type'     => 'text',
+    ));
+
+    // Menu shortcode
+    $wp_customize->add_setting('vnf_header_menu', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'sanitize_text_field',
+    ));
+    $wp_customize->add_control('vnf_header_menu', array(
+        'label'       => 'Menu Shortcode (tuỳ chọn)',
+        'description' => 'Để trống = dùng Primary Menu mặc định.',
+        'section'     => 'vnf_header',
+        'type'        => 'text',
+    ));
+}
