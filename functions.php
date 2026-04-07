@@ -419,8 +419,32 @@ function vietfarmy_product_gallery_slider() {
     ?>
     <style>
     .vngallery-slider { margin-bottom: 20px; }
-    .vngallery-main-wrap { position: relative; overflow: hidden; border-radius: 8px; background: #f8f8f8; cursor: zoom-in; }
-    .vngallery-main-wrap img { width: 100%; height: auto; display: block; }
+    .vngallery-main-wrap {
+        position: relative; overflow: hidden; border-radius: 8px;
+        background: #f8f8f8; cursor: zoom-in;
+    }
+    .vngallery-main-wrap img { width: 100%; height: auto; display: block; transform-origin: center center; transition: transform .3s ease; }
+    .vngallery-main-wrap.zoomed { overflow: hidden; cursor: grab; }
+    .vngallery-main-wrap.zoomed img { cursor: grab; }
+    .vngallery-main-wrap.zoomed:active img { cursor: grabbing; }
+
+    /* Hover zoom lens */
+    .vngallery-lens {
+        display: none; position: absolute; border: 2px solid #2271b1;
+        border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+        pointer-events: none; z-index: 10;
+    }
+    .vngallery-main-wrap:hover .vngallery-lens { display: block; }
+
+    /* Zoom hint badge */
+    .vngallery-hint-badge {
+        position: absolute; bottom: 10px; right: 10px;
+        background: rgba(0,0,0,.55); color: #fff; font-size: 11px;
+        padding: 4px 10px; border-radius: 20px; pointer-events: none;
+        opacity: .8; letter-spacing: .3px;
+    }
+
+    /* Thumbnails */
     .vngallery-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .vngallery-thumb {
         width: 72px; height: 72px; border-radius: 6px; overflow: hidden;
@@ -433,29 +457,42 @@ function vietfarmy_product_gallery_slider() {
     /* Lightbox */
     .vngallery-lightbox { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.92); z-index: 99999; align-items: center; justify-content: center; }
     .vngallery-lightbox.open { display: flex; }
-    .vngallery-lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 6px; }
-    .vngallery-lightbox .lb-close {
-        position: absolute; top: 16px; right: 20px; color: #fff; font-size: 28px;
-        cursor: pointer; line-height: 1; background: rgba(255,255,255,.15); border: none;
-        width: 40px; height: 40px; border-radius: 50%;
+    .vngallery-lightbox .lb-img-wrap { position: relative; display: flex; align-items: center; justify-content: center; max-width: 92vw; max-height: 90vh; }
+    .vngallery-lightbox .lb-img {
+        max-width: 92vw; max-height: 90vh; border-radius: 6px;
+        object-fit: contain; cursor: zoom-in;
     }
-    .vngallery-lightbox .lb-close:hover { background: rgba(255,255,255,.3); }
+    .vngallery-lightbox .lb-img.zoomed { cursor: zoom-out; }
+    .vngallery-lightbox .lb-controls { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+    .vngallery-lightbox .lb-counter { color: rgba(255,255,255,.7); font-size: 13px; }
+    .vngallery-lightbox .lb-close {
+        position: absolute; top: 12px; right: 16px; color: #fff; font-size: 24px;
+        cursor: pointer; line-height: 1; background: rgba(255,255,255,.12); border: none;
+        width: 36px; height: 36px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .vngallery-lightbox .lb-close:hover { background: rgba(255,255,255,.25); }
     .vngallery-lightbox .lb-prev,
     .vngallery-lightbox .lb-next {
         position: absolute; top: 50%; transform: translateY(-50%);
-        color: #fff; font-size: 22px; cursor: pointer; background: rgba(255,255,255,.15);
-        border: none; width: 40px; height: 40px; border-radius: 50%;
+        color: #fff; font-size: 22px; cursor: pointer; background: rgba(255,255,255,.12);
+        border: none; width: 44px; height: 44px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
     }
     .vngallery-lightbox .lb-prev { left: 16px; }
     .vngallery-lightbox .lb-next { right: 16px; }
     .vngallery-lightbox .lb-prev:hover,
-    .vngallery-lightbox .lb-next:hover { background: rgba(255,255,255,.3); }
+    .vngallery-lightbox .lb-next:hover { background: rgba(255,255,255,.25); }
+
+    /* Zoom icons */
+    .vngallery-lightbox .lb-zoom-hint { position: absolute; bottom: 16px; right: 16px; background: rgba(0,0,0,.5); color: rgba(255,255,255,.7); font-size: 11px; padding: 4px 10px; border-radius: 20px; pointer-events: none; }
     </style>
 
     <div class="vngallery-slider" id="vngallery_slider">
         <div class="vngallery-main-wrap" id="vngallery_main_wrap">
             <img src="<?php echo $main_img; ?>" alt="<?php echo esc_attr($product->get_name()); ?>" id="vngallery_main_img" data-index="0">
+            <div class="vngallery-lens" id="vngallery_lens"></div>
+            <div class="vngallery-hint-badge">🔍 Click để phóng to</div>
         </div>
 
         <?php if (!empty($thumbnails)) : ?>
@@ -467,7 +504,20 @@ function vietfarmy_product_gallery_slider() {
         <?php endif; ?>
     </div>
 
-    <!-- Hidden data -->
+    <!-- Lightbox overlay -->
+    <div class="vngallery-lightbox" id="vngallery_lightbox">
+        <div class="lb-controls">
+            <span class="lb-counter" id="lb_counter"></span>
+            <button class="lb-close" aria-label="Đóng">&#10005;</button>
+        </div>
+        <button class="lb-prev" aria-label="Trước">&#8249;</button>
+        <div class="lb-img-wrap">
+            <img src="" class="lb-img" data-idx="0" alt="" id="lb_img">
+            <span class="lb-zoom-hint">Click ảnh để zoom</span>
+        </div>
+        <button class="lb-next" aria-label="Tiếp">&#8250;</button>
+    </div>
+
     <script>
     (function(){
         var allImages = [<?php
@@ -476,62 +526,202 @@ function vietfarmy_product_gallery_slider() {
             echo "'" . implode("','", array_map('esc_url', $all_for_js)) . "'";
         ?>];
         var currentIndex = 0;
+        var isLightboxZoomed = false;
 
+        // ── Set main image ──────────────────────────────
         function setImage(src, idx) {
             currentIndex = idx;
             var img = document.getElementById('vngallery_main_img');
-            if (img) { img.src = src; img.dataset.index = idx; }
+            if (img) { img.src = src; img.dataset.index = idx; img.style.transform = 'scale(1) translate(0,0)'; }
             document.querySelectorAll('.vngallery-thumb').forEach(function(t) {
-                t.classList.toggle('active', t.dataset.index == idx);
+                t.classList.toggle('active', parseInt(t.dataset.index) === idx);
             });
         }
 
-        // Click thumbnail
+        // ── Click thumbnail ──────────────────────────────
         document.querySelectorAll('.vngallery-thumb').forEach(function(t) {
             t.addEventListener('click', function() {
                 setImage(this.dataset.src, parseInt(this.dataset.index));
             });
         });
 
-        // Click main → open lightbox
+        // ── Hover zoom (lens) ────────────────────────────
         var mainWrap = document.getElementById('vngallery_main_wrap');
-        if (mainWrap) {
-            mainWrap.addEventListener('click', function() { openLightbox(currentIndex); });
+        var mainImg  = document.getElementById('vngallery_main_img');
+        var lens     = document.getElementById('vngallery_lens');
+
+        if (mainWrap && mainImg && lens) {
+            var lensSize = 120, zoomFactor = 2.5;
+
+            mainWrap.addEventListener('mousemove', function(e) {
+                var rect = mainWrap.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+
+                lens.style.width = lensSize + 'px';
+                lens.style.height = lensSize + 'px';
+                lens.style.left = (x - lensSize / 2) + 'px';
+                lens.style.top  = (y - lensSize / 2) + 'px';
+
+                var bgX = ((x / rect.width) * 100).toFixed(2);
+                var bgY = ((y / rect.height) * 100).toFixed(2);
+                lens.style.backgroundImage = "url('" + allImages[currentIndex] + "')";
+                lens.style.backgroundSize  = (rect.width * zoomFactor) + 'px ' + (rect.height * zoomFactor) + 'px';
+                lens.style.backgroundPosition = (x * zoomFactor - lensSize/2) + 'px ' + (y * zoomFactor - lensSize/2) + 'px';
+            });
+
+            mainWrap.addEventListener('mouseleave', function() {
+                lens.style.backgroundImage = '';
+            });
         }
 
-        // Lightbox
+        // ── Click → zoom / pan on main image ─────────────
+        if (mainWrap && mainImg) {
+            var isZoomed = false, panX = 0, panY = 0;
+            var zoomScale = 2;
+
+            mainWrap.addEventListener('click', function(e) {
+                if (e.target.closest('.vngallery-thumbs')) return;
+
+                if (!isZoomed) {
+                    isZoomed = true;
+                    mainWrap.classList.add('zoomed');
+                    mainImg.style.transition = 'none';
+                    panX = 0; panY = 0;
+                    mainImg.style.transform = 'scale(' + zoomScale + ') translate(' + panX + 'px,' + panY + 'px)';
+                } else {
+                    isZoomed = false;
+                    mainWrap.classList.remove('zoomed');
+                    panX = 0; panY = 0;
+                    mainImg.style.transition = 'transform .3s ease';
+                    mainImg.style.transform = 'scale(1) translate(0,0)';
+                }
+            });
+
+            var isDragging = false, lastX = 0, lastY = 0;
+            mainImg.addEventListener('mousedown', function(e) {
+                if (!isZoomed) return;
+                isDragging = true; lastX = e.clientX; lastY = e.clientY;
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging || !isZoomed) return;
+                var dx = e.clientX - lastX;
+                var dy = e.clientY - lastY;
+                panX += dx / zoomScale;
+                panY += dy / zoomScale;
+                // Clamp
+                var maxPan = mainImg.offsetWidth * (zoomScale - 1) / 2;
+                panX = Math.max(-maxPan, Math.min(maxPan, panX));
+                panY = Math.max(-maxPan, Math.min(maxPan, panY));
+                lastX = e.clientX; lastY = e.clientY;
+                mainImg.style.transition = 'none';
+                mainImg.style.transform = 'scale(' + zoomScale + ') translate(' + panX + 'px,' + panY + 'px)';
+            });
+            document.addEventListener('mouseup', function() { isDragging = false; });
+        }
+
+        // ── Lightbox ────────────────────────────────────
         var lb = document.getElementById('vngallery_lightbox');
+        var lbImg = document.getElementById('lb_img');
+        var lbCounter = document.getElementById('lb_counter');
+        var lbZoomed = false, lbPanX = 0, lbPanY = 0;
+        var lbZoomScale = 2.5;
+
+        function updateLBCounter() {
+            if (lbCounter) lbCounter.textContent = (currentIndex + 1) + ' / ' + allImages.length;
+        }
+
         function openLightbox(idx) {
             if (!lb) return;
+            currentIndex = idx;
+            lbZoomed = false; lbPanX = 0; lbPanY = 0;
+            lbImg.style.transform = 'scale(1) translate(0,0)';
+            lbImg.classList.remove('zoomed');
+            lbImg.src = allImages[idx];
+            lbImg.dataset.idx = idx;
+            updateLBCounter();
             lb.classList.add('open');
-            lb.querySelector('.lb-img').src = allImages[idx];
-            lb.querySelector('.lb-img').dataset.idx = idx;
+            document.body.style.overflow = 'hidden';
         }
-        function closeLightbox() { if (lb) lb.classList.remove('open'); }
+
+        function closeLightbox() {
+            if (!lb) return;
+            lb.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function lbSetImage(idx) {
+            lbZoomed = false; lbPanX = 0; lbPanY = 0;
+            lbImg.style.transform = 'scale(1) translate(0,0)';
+            lbImg.classList.remove('zoomed');
+            currentIndex = idx;
+            lbImg.src = allImages[idx];
+            lbImg.dataset.idx = idx;
+            updateLBCounter();
+        }
+
         if (lb) {
             lb.querySelector('.lb-close').addEventListener('click', closeLightbox);
             lb.querySelector('.lb-prev').addEventListener('click', function() {
-                var idx = (parseInt(lb.querySelector('.lb-img').dataset.idx) - 1 + allImages.length) % allImages.length;
-                lb.querySelector('.lb-img').src = allImages[idx];
-                lb.querySelector('.lb-img').dataset.idx = idx;
+                lbSetImage((parseInt(lbImg.dataset.idx) - 1 + allImages.length) % allImages.length);
             });
             lb.querySelector('.lb-next').addEventListener('click', function() {
-                var idx = (parseInt(lb.querySelector('.lb-img').dataset.idx) + 1) % allImages.length;
-                lb.querySelector('.lb-img').src = allImages[idx];
-                lb.querySelector('.lb-img').dataset.idx = idx;
+                lbSetImage((parseInt(lbImg.dataset.idx) + 1) % allImages.length);
             });
-            lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
+            lb.addEventListener('click', function(e) { if (e.target === lb || e.target.classList.contains('lb-img-wrap')) closeLightbox(); });
+
+            // ESC to close
+            document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && lb.classList.contains('open')) closeLightbox(); });
+            document.addEventListener('keydown', function(e) {
+                if (!lb.classList.contains('open')) return;
+                if (e.key === 'ArrowLeft')  lbSetImage((parseInt(lbImg.dataset.idx) - 1 + allImages.length) % allImages.length);
+                if (e.key === 'ArrowRight') lbSetImage((parseInt(lbImg.dataset.idx) + 1) % allImages.length);
+            });
+
+            // Lightbox zoom on img click
+            lbImg.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!lbZoomed) {
+                    lbZoomed = true;
+                    lbPanX = 0; lbPanY = 0;
+                    lbImg.classList.add('zoomed');
+                    lbImg.style.transform = 'scale(' + lbZoomScale + ') translate(0,0)';
+                } else {
+                    lbZoomed = false; lbPanX = 0; lbPanY = 0;
+                    lbImg.classList.remove('zoomed');
+                    lbImg.style.transition = 'transform .3s ease';
+                    lbImg.style.transform = 'scale(1) translate(0,0)';
+                }
+            });
+
+            // Pan in lightbox zoomed
+            var lbDrag = false, lbLastX = 0, lbLastY = 0;
+            lbImg.addEventListener('mousedown', function(e) {
+                if (!lbZoomed) return;
+                lbDrag = true; lbLastX = e.clientX; lbLastY = e.clientY; e.preventDefault();
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!lbDrag || !lbZoomed) return;
+                var dx = e.clientX - lbLastX;
+                var dy = e.clientY - lbLastY;
+                lbPanX += dx / lbZoomScale; lbPanY += dy / lbZoomScale;
+                var maxPan = lbImg.offsetWidth * (lbZoomScale - 1) / 2;
+                lbPanX = Math.max(-maxPan, Math.min(maxPan, lbPanX));
+                lbPanY = Math.max(-maxPan, Math.min(maxPan, lbPanY));
+                lbLastX = e.clientX; lbLastY = e.clientY;
+                lbImg.style.transition = 'none';
+                lbImg.style.transform = 'scale(' + lbZoomScale + ') translate(' + lbPanX + 'px,' + lbPanY + 'px)';
+            });
+            document.addEventListener('mouseup', function() { lbDrag = false; });
+        }
+
+        // Open lightbox from main image
+        if (mainWrap) {
+            mainWrap.addEventListener('dblclick', function() { openLightbox(currentIndex); });
         }
     })();
     </script>
-
-    <!-- Lightbox overlay -->
-    <div class="vngallery-lightbox" id="vngallery_lightbox">
-        <button class="lb-prev" aria-label="Trước">&#8249;</button>
-        <button class="lb-close" aria-label="Đóng">&#10005;</button>
-        <img src="" class="lb-img" data-idx="0" alt="">
-        <button class="lb-next" aria-label="Tiếp">&#8250;</button>
-    </div>
     <?php
 }
 
