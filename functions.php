@@ -191,33 +191,14 @@ function vietfarmy_show_url_image_shop() {
     }
 }
 
-// 5. Hiển thị ảnh từ URL — Trang chi tiết sản phẩm
-// Bỏ ảnh mặc định + inject ảnh URL ngay trong hook đúng vị trí
-// -----------------------------------------------
-add_filter('woocommerce_single_product_image_thumbnail_html', 'vietfarmy_replace_single_image_html', 20, 2);
-
-function vietfarmy_replace_single_image_html($html, $post_thumbnail_id) {
-    if (!is_product()) return $html;
-
-    global $product;
-    $url = get_post_meta($product->get_id(), '_vietfarmy_product_image_url', true);
-    if ($url) {
-        return '<div class="vietfarmy-product-image-single">' .
-               '<img src="' . esc_url($url) . '" alt="' . esc_attr($product->get_name()) . '">' .
-               '</div>';
-    }
-    return $html;
-}
-
-// 6. CSS căn chỉnh
+// 5. CSS cho trang shop/archive
 // -----------------------------------------------
 add_action('wp_head', 'vietfarmy_url_image_css');
 
 function vietfarmy_url_image_css() {
-    if (is_product() || is_shop() || is_product_category() || is_front_page()) {
+    if (is_shop() || is_product_category() || is_front_page()) {
         echo '<style>
-            .vietfarmy-product-image img,
-            .vietfarmy-product-image-single img {
+            .vietfarmy-product-image img {
                 width: 100%;
                 height: auto;
                 display: block;
@@ -390,36 +371,168 @@ function vietfarmy_save_gallery_meta($post_id) {
     }
 }
 
-// 9. Hiển thị Album URL trên trang chi tiết sản phẩm (gallery)
+// 9. Hiển thị Album URL + Featured Image thành slider trên trang chi tiết sản phẩm
+// Bỏ hoàn toàn gallery mặc định của WooCommerce
 // -----------------------------------------------
-add_filter('woocommerce_single_product_image_thumbnail_html', 'vietfarmy_replace_gallery_html', 20, 2);
+remove_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_images', 20);
+add_action('woocommerce_before_single_product_summary', 'vietfarmy_product_gallery_slider', 20);
 
-function vietfarmy_replace_gallery_html($html, $post_thumbnail_id) {
-    if (!is_product()) return $html;
-
+function vietfarmy_product_gallery_slider() {
     global $product;
-    $gallery_urls = get_post_meta($product->get_id(), '_vietfarmy_product_gallery_urls', true);
 
-    // Nếu không có gallery URL, giữ nguyên ảnh mặc định
-    if (empty($gallery_urls) || !is_array($gallery_urls)) return $html;
+    $product_id = $product->get_id();
 
-    // Thay toàn bộ gallery bằng ảnh từ URL
-    $main_url = get_post_meta($product->get_id(), '_vietfarmy_product_image_url', true);
-    $output = '';
-
-    // Ảnh chính (lấy từ main URL nếu có, không thì lấy ảnh mặc định)
+    // 1. Ảnh chính: ưu tiên URL → featured image → placeholder
+    $main_url = get_post_meta($product_id, '_vietfarmy_product_image_url', true);
+    $featured_id = $product->get_image_id();
     if ($main_url) {
-        $output .= '<div class="vietfarmy-product-image-single woocommerce-product-gallery__image">' .
-                   '<img src="' . esc_url($main_url) . '" alt="' . esc_attr($product->get_name()) . '"></div>';
+        $main_img = esc_url($main_url);
+    } elseif ($featured_id) {
+        $main_img = wp_get_attachment_image_url($featured_id, 'large');
+    } else {
+        $main_img = wc_placeholder_img_src('large');
     }
 
-    // Ảnh gallery
-    foreach ($gallery_urls as $url) {
-        $output .= '<div class="vietfarmy-gallery-image woocommerce-product-gallery__image">' .
-                   '<img src="' . esc_url($url) . '" alt="' . esc_attr($product->get_name()) . '"></div>';
+    // 2. Album URL
+    $gallery_urls = get_post_meta($product_id, '_vietfarmy_product_gallery_urls', true);
+    if (!is_array($gallery_urls)) $gallery_urls = array();
+
+    // 3. Gallery images từ WC (uploaded)
+    $wc_gallery_ids = $product->get_gallery_image_ids();
+    if (!is_array($wc_gallery_ids)) $wc_gallery_ids = array();
+
+    // Tổng hợp tất cả ảnh: main + gallery URLs + WC gallery
+    $all_images = array();
+    $all_images[$main_img] = true; // tránh trùng
+
+    foreach ($gallery_urls as $gurl) {
+        if ($gurl) $all_images[esc_url($gurl)] = true;
+    }
+    foreach ($wc_gallery_ids as $gid) {
+        $src = wp_get_attachment_image_url($gid, 'large');
+        if ($src) $all_images[$src] = true;
     }
 
-    return $output;
+    // Loại bỏ main_img khỏi thumbnails
+    unset($all_images[$main_img]);
+    $thumbnails = array_keys($all_images);
+    ?>
+    <style>
+    .vngallery-slider { margin-bottom: 20px; }
+    .vngallery-main-wrap { position: relative; overflow: hidden; border-radius: 8px; background: #f8f8f8; cursor: zoom-in; }
+    .vngallery-main-wrap img { width: 100%; height: auto; display: block; }
+    .vngallery-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .vngallery-thumb {
+        width: 72px; height: 72px; border-radius: 6px; overflow: hidden;
+        border: 2px solid transparent; cursor: pointer; opacity: 0.7;
+        transition: border-color .2s, opacity .2s; object-fit: cover;
+    }
+    .vngallery-thumb:hover { opacity: 1; }
+    .vngallery-thumb.active { border-color: #2271b1; opacity: 1; }
+
+    /* Lightbox */
+    .vngallery-lightbox { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.92); z-index: 99999; align-items: center; justify-content: center; }
+    .vngallery-lightbox.open { display: flex; }
+    .vngallery-lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 6px; }
+    .vngallery-lightbox .lb-close {
+        position: absolute; top: 16px; right: 20px; color: #fff; font-size: 28px;
+        cursor: pointer; line-height: 1; background: rgba(255,255,255,.15); border: none;
+        width: 40px; height: 40px; border-radius: 50%;
+    }
+    .vngallery-lightbox .lb-close:hover { background: rgba(255,255,255,.3); }
+    .vngallery-lightbox .lb-prev,
+    .vngallery-lightbox .lb-next {
+        position: absolute; top: 50%; transform: translateY(-50%);
+        color: #fff; font-size: 22px; cursor: pointer; background: rgba(255,255,255,.15);
+        border: none; width: 40px; height: 40px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .vngallery-lightbox .lb-prev { left: 16px; }
+    .vngallery-lightbox .lb-next { right: 16px; }
+    .vngallery-lightbox .lb-prev:hover,
+    .vngallery-lightbox .lb-next:hover { background: rgba(255,255,255,.3); }
+    </style>
+
+    <div class="vngallery-slider" id="vngallery_slider">
+        <div class="vngallery-main-wrap" id="vngallery_main_wrap">
+            <img src="<?php echo $main_img; ?>" alt="<?php echo esc_attr($product->get_name()); ?>" id="vngallery_main_img" data-index="0">
+        </div>
+
+        <?php if (!empty($thumbnails)) : ?>
+        <div class="vngallery-thumbs" id="vngallery_thumbs">
+            <?php foreach ($thumbnails as $i => $thumb) : ?>
+                <img src="<?php echo $thumb; ?>" class="vngallery-thumb" data-src="<?php echo $thumb; ?>" data-index="<?php echo $i + 1; ?>">
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Hidden data -->
+    <script>
+    (function(){
+        var allImages = [<?php
+            $all_for_js = array($main_img);
+            foreach ($thumbnails as $t) $all_for_js[] = $t;
+            echo "'" . implode("','", array_map('esc_url', $all_for_js)) . "'";
+        ?>];
+        var currentIndex = 0;
+
+        function setImage(src, idx) {
+            currentIndex = idx;
+            var img = document.getElementById('vngallery_main_img');
+            if (img) { img.src = src; img.dataset.index = idx; }
+            document.querySelectorAll('.vngallery-thumb').forEach(function(t) {
+                t.classList.toggle('active', t.dataset.index == idx);
+            });
+        }
+
+        // Click thumbnail
+        document.querySelectorAll('.vngallery-thumb').forEach(function(t) {
+            t.addEventListener('click', function() {
+                setImage(this.dataset.src, parseInt(this.dataset.index));
+            });
+        });
+
+        // Click main → open lightbox
+        var mainWrap = document.getElementById('vngallery_main_wrap');
+        if (mainWrap) {
+            mainWrap.addEventListener('click', function() { openLightbox(currentIndex); });
+        }
+
+        // Lightbox
+        var lb = document.getElementById('vngallery_lightbox');
+        function openLightbox(idx) {
+            if (!lb) return;
+            lb.classList.add('open');
+            lb.querySelector('.lb-img').src = allImages[idx];
+            lb.querySelector('.lb-img').dataset.idx = idx;
+        }
+        function closeLightbox() { if (lb) lb.classList.remove('open'); }
+        if (lb) {
+            lb.querySelector('.lb-close').addEventListener('click', closeLightbox);
+            lb.querySelector('.lb-prev').addEventListener('click', function() {
+                var idx = (parseInt(lb.querySelector('.lb-img').dataset.idx) - 1 + allImages.length) % allImages.length;
+                lb.querySelector('.lb-img').src = allImages[idx];
+                lb.querySelector('.lb-img').dataset.idx = idx;
+            });
+            lb.querySelector('.lb-next').addEventListener('click', function() {
+                var idx = (parseInt(lb.querySelector('.lb-img').dataset.idx) + 1) % allImages.length;
+                lb.querySelector('.lb-img').src = allImages[idx];
+                lb.querySelector('.lb-img').dataset.idx = idx;
+            });
+            lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
+        }
+    })();
+    </script>
+
+    <!-- Lightbox overlay -->
+    <div class="vngallery-lightbox" id="vngallery_lightbox">
+        <button class="lb-prev" aria-label="Trước">&#8249;</button>
+        <button class="lb-close" aria-label="Đóng">&#10005;</button>
+        <img src="" class="lb-img" data-idx="0" alt="">
+        <button class="lb-next" aria-label="Tiếp">&#8250;</button>
+    </div>
+    <?php
 }
 
 // 10. CSS cho album gallery
@@ -429,15 +542,7 @@ add_action('wp_head', 'vietfarmy_gallery_css');
 function vietfarmy_gallery_css() {
     if (is_product()) {
         echo '<style>
-            .vietfarmy-gallery-image img,
-            .vietfarmy-product-image-single img {
-                width: 100%;
-                height: auto;
-                display: block;
-            }
-            .vietfarmy-gallery-image {
-                margin-top: 8px;
-            }
+            .vngallery-slider { margin-bottom: 20px; }
         </style>';
     }
 }
@@ -812,31 +917,3 @@ add_filter( 'wupdates_gather_ids', 'gema_wupdates_add_id_ML4Gm', 10, 1 );
 * Various plugins integrations.
 */
 require get_template_directory() . '/inc/integrations.php';
-
-// Tự động lấy ảnh từ URL trong Custom Field làm ảnh sản phẩm
-
-// Trang danh sách sản phẩm (archive/shop): bỏ ảnh mặc định, thay bằng URL
-remove_action('woocommerce_before_shop_loop_item_title', 'woocommerce_template_loop_product_thumbnail', 10);
-add_action('woocommerce_before_shop_loop_item_title', 'vietfarmy_display_url_image_archive', 9);
-function vietfarmy_display_url_image_archive() {
-    global $post;
-    $image_url = get_post_meta($post->ID, 'fifu_image_url', true);
-    if ($image_url) {
-        echo '<div class="product-image-url"><img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '"></div>';
-    }
-}
-
-// Trang chi tiết sản phẩm: ẩn ảnh mặc định, hiện ảnh từ URL
-add_action('wp_head', 'vietfarmy_hide_default_single_image');
-function vietfarmy_hide_default_single_image() {
-    if (!is_singular('product')) return;
-    echo '<style>.woocommerce-product-gallery { display: none !important; }</style>';
-}
-add_action('woocommerce_before_single_product_summary', 'vietfarmy_display_url_image_single', 5);
-function vietfarmy_display_url_image_single() {
-    global $post;
-    $image_url = get_post_meta($post->ID, 'fifu_image_url', true);
-    if ($image_url) {
-        echo '<div class="product-image-url"><img src="' . esc_url($image_url) . '" alt="' . esc_attr(get_the_title()) . '" style="width:100%; height:auto;"></div>';
-    }
-}
