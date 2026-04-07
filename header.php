@@ -41,6 +41,11 @@
     <?php } ?>
 </div>
 
+<style>
+/* Ẩn mobile-header-wrapper gốc của Gema (đã có header mới của VietFarmy) */
+.mobile-header-wrapper { display: none !important; }
+</style>
+
 <div id="page" class="site">
 	<a class="skip-link screen-reader-text" href="#content"><?php esc_html_e( 'Skip to content', 'gema' ); ?></a>
 
@@ -91,18 +96,19 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
     .vnf-header-bar { height: 54px; padding: 0 16px; gap: 8px; }
 
     /* Logo trái — Hamburger phải */
-    .vnf-logo { flex: 1; }
+    .vnf-logo { flex-shrink: 0; }
     .vnf-logo img { height: 36px; }
     .vnf-logo-text { font-size: 16px; }
 
     /* Ẩn menu ngang */
     .vnf-nav { display: none; }
 
-    /* Hamburger */
+    /* Hamburger — đẩy sang phải */
     .vnf-hamburger {
         display: flex; flex-direction: column; justify-content: center;
         align-items: center; width: 40px; height: 40px; cursor: pointer;
-        background: none; border: none; padding: 8px; border-radius: 6px; transition: background .2s;
+        background: none; border: none; padding: 8px; border-radius: 6px;
+        transition: background .2s; margin-left: auto; flex-shrink: 0;
     }
     .vnf-hamburger:hover { background: #f0f0f0; }
     .vnf-hamburger span {
@@ -142,7 +148,6 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
     }
     .vnf-drawer-nav li a:hover { background: #f8f8f8; color: #2d6a4f; }
     .vnf-drawer-nav li:last-child a { border-bottom: none; }
-    .vnf-drawer-nav a:last-child { border-bottom: none; }
 }
 </style>
 
