@@ -14,12 +14,12 @@ require_once get_template_directory() . '/assets/php/featured-image-from-url.php
 // HEADER / BANNER ZONE — Logo, Menu, Banner
 // ============================================================
 
+// Hook vào woocommerce (giữ lại nếu theme dùng template WC)
 add_action('woocommerce_before_main_content', 'vietfarmy_header_zone', 5);
 
-function vietfarmy_header_zone() {
-    if (!is_singular('product')) return;
-
-    // Logo: WP_Customize_Image_Control lưu attachment ID → cần convert sang URL
+// Function trả về HTML (dùng được cả hook lẫn gọi trực tiếp từ template)
+function vietfarmy_header_zone_inline() {
+    ob_start();
     $logo_mod = get_theme_mod('vietfarmy_header_logo', '');
     if (is_numeric($logo_mod)) {
         $logo_url = wp_get_attachment_image_url((int)$logo_mod, 'full');
@@ -152,6 +152,15 @@ function vietfarmy_header_zone() {
         <?php endif; ?>
     </div>
     <?php
+    // Trả về output thay vì echo trực tiếp
+    return ob_get_clean();
+}
+
+// Alias cho backward compat hook
+function vietfarmy_header_zone() {
+    if (!is_singular('product')) return;
+    echo vietfarmy_header_zone_inline();
+}
 }
 
 // ============================================================
