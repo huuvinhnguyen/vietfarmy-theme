@@ -19,10 +19,26 @@ add_action('woocommerce_before_main_content', 'vietfarmy_header_zone', 5);
 function vietfarmy_header_zone() {
     if (!is_singular('product')) return;
 
-    $logo_url       = get_theme_mod('vietfarmy_header_logo', '');
+    // Logo: WP_Customize_Image_Control lưu attachment ID → cần convert sang URL
+    $logo_mod = get_theme_mod('vietfarmy_header_logo', '');
+    if (is_numeric($logo_mod)) {
+        $logo_url = wp_get_attachment_image_url((int)$logo_mod, 'full');
+    } else {
+        $logo_url = $logo_mod;
+    }
+    if (!$logo_url) $logo_url = '';
+
+    // Banner: tương tự
+    $banner_mod = get_theme_mod('vietfarmy_header_banner', '');
+    if (is_numeric($banner_mod)) {
+        $banner_url = wp_get_attachment_image_url((int)$banner_mod, 'full');
+    } else {
+        $banner_url = $banner_mod;
+    }
+    if (!$banner_url) $banner_url = '';
+
     $logo_link      = home_url('/');
     $site_name      = get_bloginfo('name');
-    $banner_url     = get_theme_mod('vietfarmy_header_banner', '');
     $banner_link    = get_theme_mod('vietfarmy_header_banner_link', home_url('/'));
     $show_banner    = get_theme_mod('vietfarmy_header_show_banner', false);
     $menu_shortcode = get_theme_mod('vietfarmy_header_menu', '');
@@ -150,45 +166,63 @@ function vietfarmy_header_customize($wp_customize) {
         'priority' => 30,
     ));
 
-    // Logo URL
-    $wp_customize->add_setting('vietfarmy_header_logo', array('default' => ''));
-    $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, 'vietfarmy_header_logo', array(
-        'label'    => 'Logo URL',
-        'section'  => 'vietfarmy_header',
-        'settings' => 'vietfarmy_header_logo',
-    )));
-
-    // Banner URL
-    $wp_customize->add_setting('vietfarmy_header_banner', array('default' => ''));
-    $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, 'vietfarmy_header_banner', array(
-        'label'    => 'Banner URL',
-        'section'  => 'vietfarmy_header',
-        'settings' => 'vietfarmy_header_banner',
-    )));
-
-    // Banner link
-    $wp_customize->add_setting('vietfarmy_header_banner_link', array('default' => home_url('/')));
-    $wp_customize->add_control('vietfarmy_header_banner_link', array(
-        'label'    => 'Liên kết Banner',
-        'section'  => 'vietfarmy_header',
-        'type'     => 'url',
+    // Logo
+    $wp_customize->add_setting('vietfarmy_header_logo', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'esc_url_raw',
     ));
+    $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, 'vietfarmy_header_logo', array(
+        'label'    => 'Logo',
+        'section'  => 'vietfarmy_header',
+    )));
+
+    // Banner
+    $wp_customize->add_setting('vietfarmy_header_banner', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'esc_url_raw',
+    ));
+    $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, 'vietfarmy_header_banner', array(
+        'label'    => 'Banner',
+        'section'  => 'vietfarmy_header',
+    )));
 
     // Show banner
-    $wp_customize->add_setting('vietfarmy_header_show_banner', array('default' => false));
+    $wp_customize->add_setting('vietfarmy_header_show_banner', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'absint',
+    ));
     $wp_customize->add_control('vietfarmy_header_show_banner', array(
         'label'    => 'Hiển thị Banner',
         'section'  => 'vietfarmy_header',
         'type'     => 'checkbox',
     ));
 
-    // Menu shortcode
-    $wp_customize->add_setting('vietfarmy_header_menu', array('default' => ''));
-    $wp_customize->add_control('vietfarmy_header_menu', array(
-        'label'    => 'Menu Shortcode (tuỳ chọn)',
+    // Banner link
+    $wp_customize->add_setting('vietfarmy_header_banner_link', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'esc_url_raw',
+    ));
+    $wp_customize->add_control('vietfarmy_header_banner_link', array(
+        'label'    => 'Liên kết Banner (URL)',
         'section'  => 'vietfarmy_header',
         'type'     => 'text',
+    ));
+
+    // Menu shortcode
+    $wp_customize->add_setting('vietfarmy_header_menu', array(
+        'type'              => 'theme_mod',
+        'transport'         => 'refresh',
+        'sanitize_callback' => 'sanitize_text_field',
+    ));
+    $wp_customize->add_control('vietfarmy_header_menu', array(
+        'label'       => 'Menu Shortcode (tuỳ chọn)',
         'description' => 'Để trống = dùng Primary Menu mặc định.',
+        'section'     => 'vietfarmy_header',
+        'type'        => 'text',
     ));
 }
 
