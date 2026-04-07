@@ -95,7 +95,7 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
 /* ── Mobile (<= 768px) ── */
 @media (max-width: 768px) {
     /* Reset triệt để — bỏ khoảng trắng */
-    .vnf-header { position: relative; margin: 0 !important; padding: 0 !important; }
+    .vnf-header { position: relative; margin: 0 !important; padding: 0 !important; z-index: 10000; }
     .vnf-header-bar { height: 52px; padding: 0 12px !important; gap: 6px; margin: 0 !important; border-radius: 0 !important; }
     .vnf-header-bar > * { margin: 0 !important; }
 
@@ -127,9 +127,9 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
     }
     .vnf-overlay.open { display: block; opacity: 1; }
 
-    /* Drawer menu */
+    /* Drawer menu — bắt đầu từ dưới header bar, không đè lên */
     .vnf-drawer {
-        position: fixed; top: 0; right: 0; bottom: 0; width: 280px;
+        position: fixed; top: 52px; right: 0; bottom: 0; width: 280px;
         background: #fff; z-index: 10001; overflow-y: auto;
         transform: translateX(100%); transition: transform .3s;
         box-shadow: -4px 0 20px rgba(0,0,0,.15);
