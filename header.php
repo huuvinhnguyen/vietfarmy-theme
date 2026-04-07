@@ -123,21 +123,28 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
     /* Overlay backdrop */
     .vnf-overlay {
         display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,.5); z-index: 10000; opacity: 0; transition: opacity .3s;
+        background: rgba(0,0,0,.5); z-index: 10000;
+        opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s;
     }
-    .vnf-overlay.open { display: block; opacity: 1; }
+    .vnf-overlay.open {
+        display: block; opacity: 1; visibility: visible;
+    }
 
-    /* Drawer menu — bắt đầu từ dưới header bar, không đè lên */
+    /* Drawer menu */
     .vnf-drawer {
         position: fixed; top: 52px; right: 0; bottom: 0; width: 280px;
         background: #fff; z-index: 10001; overflow-y: auto;
-        transform: translateX(100%); transition: transform .3s;
+        transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
         box-shadow: -4px 0 20px rgba(0,0,0,.15);
     }
-    .vnf-drawer.open { transform: translateX(0); }
+    .vnf-drawer.open {
+        display: block;
+        transform: translateX(0);
+    }
     .vnf-drawer-header {
         display: flex; justify-content: space-between; align-items: center;
         padding: 16px; border-bottom: 1px solid #eee;
+        position: sticky; top: 0; z-index: 1; background: #fff;
     }
     .vnf-drawer-header strong { font-size: 15px; color: #2d6a4f; }
     .vnf-drawer-close {
@@ -228,13 +235,17 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
     var drawer = document.getElementById('vnf_drawer');
     var closeBtn = document.getElementById('vnf_close');
     function open() {
-        overlay.classList.add('open');
         drawer.classList.add('open');
+        requestAnimationFrame(function() {
+            overlay.classList.add('open');
+        });
         document.body.style.overflow = 'hidden';
     }
     function close() {
         overlay.classList.remove('open');
-        drawer.classList.remove('open');
+        requestAnimationFrame(function() {
+            drawer.classList.remove('open');
+        });
         document.body.style.overflow = '';
     }
     if (btn) btn.addEventListener('click', open);
