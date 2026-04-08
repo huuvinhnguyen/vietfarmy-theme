@@ -112,13 +112,23 @@ function vnf_render_menu_items($menu_raw) {
 .vnf-logo img { height: 44px; width: auto; display: block; }
 .vnf-logo-text { font-size: 18px; font-weight: 700; color: #2d6a4f; text-decoration: none; }
 .vnf-nav {
-    flex: 1; justify-content: center; gap: 2px; flex-wrap: wrap;
+    flex: 1; display: flex; align-items: center;
+    justify-content: center; gap: 4px;
 }
+.vnf-nav ul {
+    display: flex; align-items: center; justify-content: center;
+    list-style: none; margin: 0; padding: 0; gap: 0;
+}
+.vnf-nav li { flex-shrink: 0; }
 .vnf-nav a {
-    display: block; padding: 8px 16px; color: #333;
-    font-size: 14px; border-radius: 6px; transition: all .2s; font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 20px; color: #333;
+    font-size: 14px; border-radius: 8px; transition: all .2s; font-weight: 500;
+    white-space: nowrap;
 }
-.vnf-nav a:hover, .vnf-nav a.current-menu-item { background: #2d6a4f; color: #fff; }
+.vnf-nav a:hover, .vnf-nav a.current-menu-item {
+    background: #2d6a4f; color: #fff;
+}
 .vnf-banner img { width: 100%; height: auto; max-height: 380px; object-fit: cover; display: block; }
 .vnf-banner a { display: block; }
 
