@@ -59,7 +59,28 @@ $logo_url = get_theme_mod('vnf_header_logo', '');
 $banner_url = get_theme_mod('vnf_header_banner', '');
 $show_banner = get_theme_mod('vnf_header_show_banner', false);
 $banner_link = get_theme_mod('vnf_header_banner_link', home_url('/'));
-$menu_shortcode = get_theme_mod('vnf_header_menu', '');
+
+// Menu items: mỗi dòng "Tên | URL"
+$menu_raw = get_theme_mod('vnf_header_menu_items', '');
+
+function vnf_render_menu_items($menu_raw) {
+    if (empty(trim($menu_raw))) return;
+    $current_url = rtrim($_SERVER['REQUEST_URI'], '/');
+    $home_url = rtrim(home_url(), '/');
+    $lines = explode("\n", trim($menu_raw));
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line)) continue;
+        $parts = explode('|', $line, 2);
+        $label = isset($parts[0]) ? trim($parts[0]) : '';
+        $url = isset($parts[1]) ? trim($parts[1]) : '#';
+        if (empty($label)) continue;
+        $url_normalized = rtrim(wp_http_validate_url($url) ? $url : home_url($url), '/');
+        $is_active = ($current_url === $url_normalized || $current_url === parse_url($url_normalized, PHP_URL_PATH));
+        $active_class = $is_active ? ' class="current-menu-item"' : '';
+        echo '<li><a href="' . esc_url($url) . '"' . $active_class . '>' . esc_html($label) . '</a></li>';
+    }
+}
 ?>
 <style>
 /* Reset — loại bỏ style theme Gema can thiệp menu */
@@ -195,17 +216,9 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
 
         <!-- Menu Desktop -->
         <nav class="vnf-nav">
-            <?php
-            if ($menu_shortcode) {
-                echo do_shortcode($menu_shortcode);
-            } else {
-                wp_nav_menu(array(
-                    'theme_location' => 'primary',
-                    'container' => false,
-                    'fallback_cb' => false,
-                ));
-            }
-            ?>
+            <ul>
+                <?php vnf_render_menu_items($menu_raw); ?>
+            </ul>
         </nav>
 
         <!-- Hamburger (mobile) -->
@@ -234,17 +247,9 @@ $menu_shortcode = get_theme_mod('vnf_header_menu', '');
         <button class="vnf-drawer-close" id="vnf_close">&#10005;</button>
     </div>
     <nav class="vnf-drawer-nav">
-        <?php
-        if ($menu_shortcode) {
-            echo do_shortcode($menu_shortcode);
-        } else {
-            wp_nav_menu(array(
-                'theme_location' => 'primary',
-                'container' => false,
-                'fallback_cb' => false,
-            ));
-        }
-        ?>
+        <ul>
+            <?php vnf_render_menu_items($menu_raw); ?>
+        </ul>
     </nav>
 </div>
 

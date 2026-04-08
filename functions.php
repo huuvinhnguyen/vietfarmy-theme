@@ -1166,16 +1166,18 @@ function vnf_customize_register($wp_customize) {
         'type'     => 'text',
     ));
 
-    // Menu shortcode
-    $wp_customize->add_setting('vnf_header_menu', array(
+    // ── Menu Items ──
+    // Mỗi item lưu dạng: label || url (phân cách bằng ||)
+    $wp_customize->add_setting('vnf_header_menu_items', array(
         'type'              => 'theme_mod',
         'transport'         => 'refresh',
         'sanitize_callback' => 'sanitize_text_field',
+        'default'           => '',
     ));
-    $wp_customize->add_control('vnf_header_menu', array(
-        'label'       => 'Menu Shortcode (tuỳ chọn)',
-        'description' => 'Để trống = dùng Primary Menu mặc định.',
+    $wp_customize->add_control('vnf_header_menu_items', array(
+        'label'       => 'Menu Items',
+        'description' => 'Mỗi dòng: Tên menu | URL<br>Ví dụ: <strong>Trang chủ | /</strong><br><strong>Sản phẩm | /products</strong>',
         'section'     => 'vnf_header',
-        'type'        => 'text',
+        'type'        => 'textarea',
     ));
 }
