@@ -65,9 +65,9 @@ $menu_raw = get_theme_mod('vnf_header_menu_items', '');
 
 function vnf_render_menu_items($menu_raw) {
     if (empty(trim($menu_raw))) return;
-    $current_url = rtrim($_SERVER['REQUEST_URI'], '/');
-    $home_url = rtrim(home_url(), '/');
-    $lines = explode("\n", trim($menu_raw));
+    $current_url = isset($_SERVER['REQUEST_URI']) ? rtrim($_SERVER['REQUEST_URI'], '/') : '';
+    $menu_raw = str_replace("\r", '', $menu_raw);
+    $lines = preg_split('/\n/', trim($menu_raw));
     foreach ($lines as $line) {
         $line = trim($line);
         if (empty($line)) continue;

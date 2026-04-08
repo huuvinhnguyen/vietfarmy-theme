@@ -1167,16 +1167,28 @@ function vnf_customize_register($wp_customize) {
     ));
 
     // ── Menu Items ──
-    // Mỗi item lưu dạng: label || url (phân cách bằng ||)
     $wp_customize->add_setting('vnf_header_menu_items', array(
         'type'              => 'theme_mod',
         'transport'         => 'refresh',
-        'sanitize_callback' => 'sanitize_text_field',
+        'sanitize_callback' => function($val) {
+            // Chỉ sanitize từng dòng, giữ nguyên \n và |
+            $lines = preg_split('/\r?\n/', $val);
+            $clean = array();
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                $parts = explode('|', $line, 2);
+                $label = isset($parts[0]) ? sanitize_text_field(trim($parts[0])) : '';
+                $url = isset($parts[1]) ? esc_url_raw(trim($parts[1])) : '#';
+                if (!empty($label)) $clean[] = $label . ' | ' . $url;
+            }
+            return implode("\n", $clean);
+        },
         'default'           => '',
     ));
     $wp_customize->add_control('vnf_header_menu_items', array(
         'label'       => 'Menu Items',
-        'description' => 'Mỗi dòng: Tên menu | URL<br>Ví dụ: <strong>Trang chủ | /</strong><br><strong>Sản phẩm | /products</strong>',
+        'description' => 'Mỗi dòng: <strong>Tên | URL</strong><br>Ví dụ:<br>Trang chủ | /<br>Sản phẩm | /products',
         'section'     => 'vnf_header',
         'type'        => 'textarea',
     ));
