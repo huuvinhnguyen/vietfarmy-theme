@@ -737,6 +737,116 @@ function vietfarmy_gallery_css() {
     }
 }
 
+// ============================================================
+// FEATURED IMAGE TỪ URL — CHO POST (BÀI VIẾT)
+// ============================================================
+
+// 1. Thêm Meta Box nhập URL ảnh đại diện cho post
+add_action('add_meta_boxes', 'vnf_post_add_image_meta_box');
+
+function vnf_post_add_image_meta_box() {
+    add_meta_box(
+        'vnf_post_image_url',
+        'Ảnh đại diện từ URL',
+        'vnf_post_image_meta_box_callback',
+        'post',
+        'side',
+        'low'
+    );
+}
+
+function vnf_post_image_meta_box_callback($post) {
+    wp_nonce_field('vnf_post_image_save', 'vnf_post_image_nonce');
+    $url = get_post_meta($post->ID, '_vnf_post_image_url', true);
+    ?>
+    <style>
+        .vnf-post-url-box .url-input-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+        .vnf-post-url-box input[type="url"] { flex: 1; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .vnf-post-url-box input[type="url"]:focus { border-color: #2271b1; outline: none; }
+        .vnf-post-url-box .preview-box { margin-top: 8px; background: #f0f0f1; padding: 8px; border-radius: 4px; text-align: center; }
+        .vnf-post-url-box .preview-box img { max-width: 100%; border-radius: 4px; border: 1px solid #ddd; max-height: 150px; object-fit: cover; }
+        .vnf-post-url-box .hint { font-size: 12px; color: #646970; margin-top: 8px; line-height: 1.5; }
+    </style>
+    <div class="vnf-post-url-box">
+        <div class="url-input-row">
+            <input type="url" id="vnf_post_image_url" name="vnf_post_image_url" value="<?php echo esc_url($url); ?>" placeholder="https://example.com/image.jpg">
+        </div>
+        <?php if ($url) : ?>
+            <div class="preview-box">
+                <img src="<?php echo esc_url($url); ?>" alt="Preview">
+            </div>
+        <?php endif; ?>
+        <p class="hint">📎 Dán link ảnh từ web bất kỳ. Ảnh sẽ hiển thị thay cho ảnh đại diện mặc định. Không cần upload lên host.</p>
+    </div>
+    <?php
+}
+
+// 2. Lưu URL khi save post
+add_action('save_post', 'vnf_post_save_image_meta');
+
+function vnf_post_save_image_meta($post_id) {
+    if (get_post_type($post_id) !== 'post') return;
+    if (!isset($_POST['vnf_post_image_nonce']) || !wp_verify_nonce($_POST['vnf_post_image_nonce'], 'vnf_post_image_save')) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+    if (isset($_POST['vnf_post_image_url'])) {
+        update_post_meta($post_id, '_vnf_post_image_url', esc_url_raw($_POST['vnf_post_image_url']));
+    }
+}
+
+// ============================================================
+// FEATURED IMAGE TỪ URL — CHO PAGE
+// ============================================================
+add_action('add_meta_boxes', 'vnf_page_add_image_meta_box');
+
+function vnf_page_add_image_meta_box() {
+    add_meta_box(
+        'vnf_page_image_url',
+        'Ảnh đại diện từ URL',
+        'vnf_page_image_meta_box_callback',
+        'page',
+        'side',
+        'low'
+    );
+}
+
+function vnf_page_image_meta_box_callback($post) {
+    wp_nonce_field('vnf_page_image_save', 'vnf_page_image_nonce');
+    $url = get_post_meta($post->ID, '_vnf_post_image_url', true);
+    ?>
+    <style>
+        .vnf-post-url-box .url-input-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+        .vnf-post-url-box input[type="url"] { flex: 1; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .vnf-post-url-box .preview-box { margin-top: 8px; background: #f0f0f1; padding: 8px; border-radius: 4px; text-align: center; }
+        .vnf-post-url-box .preview-box img { max-width: 100%; border-radius: 4px; border: 1px solid #ddd; max-height: 150px; object-fit: cover; }
+        .vnf-post-url-box .hint { font-size: 12px; color: #646970; margin-top: 8px; line-height: 1.5; }
+    </style>
+    <div class="vnf-post-url-box">
+        <div class="url-input-row">
+            <input type="url" id="vnf_page_image_url" name="vnf_post_image_url" value="<?php echo esc_url($url); ?>" placeholder="https://example.com/image.jpg">
+        </div>
+        <?php if ($url) : ?>
+            <div class="preview-box">
+                <img src="<?php echo esc_url($url); ?>" alt="Preview">
+            </div>
+        <?php endif; ?>
+        <p class="hint">📎 Dán link ảnh từ web bất kỳ.</p>
+    </div>
+    <?php
+}
+
+add_action('save_post', 'vnf_page_save_image_meta');
+
+function vnf_page_save_image_meta($post_id) {
+    if (get_post_type($post_id) !== 'page') return;
+    if (!isset($_POST['vnf_page_image_nonce']) || !wp_verify_nonce($_POST['vnf_page_image_nonce'], 'vnf_page_image_save')) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+    if (isset($_POST['vnf_post_image_url'])) {
+        update_post_meta($post_id, '_vnf_post_image_url', esc_url_raw($_POST['vnf_post_image_url']));
+    }
+}
+
 if ( ! function_exists( 'gema_setup' ) ) :/**
 	 * Sets up theme defaults and registers support for various WordPress features.
 	 *

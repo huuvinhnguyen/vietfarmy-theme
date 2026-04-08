@@ -12,23 +12,43 @@
     <div class="card__mask">
 	    <div class="card__hover">
 
-	<?php if ( has_post_thumbnail() ) : ?>
+	<?php
+	// Ưu tiên: Ảnh từ URL custom → Featured Image mặc định → không có ảnh
+	$post_image_url = get_post_meta( get_the_ID(), '_vnf_post_image_url', true );
+	$has_thumb = has_post_thumbnail() || ! empty( $post_image_url );
+	?>
+
+	<?php if ( $has_thumb ) : ?>
 
 		<div class="card__wrap">
 			<div class="card__shadow">
 				<a href="<?php the_permalink(); ?>" <?php gema_the_post_thumbnail_class( 'card__image' ); ?>>
                     <?php
-                        $attachment = get_post_thumbnail_id( get_the_ID() );
-                        $image_alt = get_post_meta($attachment, '_wp_attachment_image_alt', TRUE);
-                        $image      = wp_get_attachment_image_src( $attachment, 'full' );
-                        $padding    = $image[2] * 100 / $image[1];
-                        $thumb_src  = get_the_post_thumbnail_url( get_the_ID(), 'gema-super-small' );
-                        $src        = get_the_post_thumbnail_url( get_the_ID(), 'gema-archive-' . gema_get_post_thumbnail_aspect_ratio_class() );
+                        if ( ! empty( $post_image_url ) ) {
+                            // Ảnh từ URL custom — giữ cấu trúc masonry grid
+                            $image_alt = esc_attr( get_the_title() );
+                            ?>
+                            <div class="card__image-wrap" style="padding-top: 66%;">
+                                <img class="card__thumb" src="<?php echo esc_url( $post_image_url ); ?>" alt="<?php echo $image_alt; ?>">
+                                <div class="card__image--large" data-src="<?php echo esc_url( $post_image_url ); ?>"></div>
+                            </div>
+                            <?php
+                        } else {
+                            // Featured image mặc định
+                            $attachment = get_post_thumbnail_id( get_the_ID() );
+                            $image_alt = get_post_meta( $attachment, '_wp_attachment_image_alt', TRUE );
+                            $image      = wp_get_attachment_image_src( $attachment, 'full' );
+                            $padding    = $image[2] * 100 / $image[1];
+                            $thumb_src  = get_the_post_thumbnail_url( get_the_ID(), 'gema-super-small' );
+                            $src        = get_the_post_thumbnail_url( get_the_ID(), 'gema-archive-' . gema_get_post_thumbnail_aspect_ratio_class() );
+                            ?>
+                            <div class="card__image-wrap" style="padding-top: <?php echo esc_html( $padding ) . '%'; ?>;">
+                                <img class="card__thumb" src="<?php echo esc_url( $thumb_src ); ?>" alt="<?php echo esc_attr( $image_alt ); ?>">
+                                <div class="card__image--large" data-src="<?php echo esc_url( $src ); ?>"></div>
+                            </div>
+                            <?php
+                        }
                     ?>
-                    <div class="card__image-wrap" style="padding-top: <?php echo esc_html( $padding ) . '%'; ?>;">
-                        <img class="card__thumb" src="<?php echo esc_url( $thumb_src ); ?>" alt="<?php echo esc_attr($image_alt) ?>">
-                        <div class="card__image--large" data-src="<?php echo esc_url( $src ); ?>"></div>
-                    </div>
 				</a>
 			</div>
 			<div class="card-title-wrap">
