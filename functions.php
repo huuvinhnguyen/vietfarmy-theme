@@ -1539,46 +1539,4 @@ function vnf_customize_register($wp_customize) {
             'type'     => 'url',
         ));
     }
-
-    // ── Sản phẩm nổi bật ──
-    $wp_customize->add_section('vnf_featured', array(
-        'title'    => 'Sản phẩm nổi bật (VietFarmy)',
-        'priority' => 30,
-    ));
-
-    $wp_customize->add_setting('vnf_show_featured_products', array(
-        'type'              => 'theme_mod',
-        'transport'         => 'refresh',
-        'sanitize_callback' => 'absint',
-    ));
-    $wp_customize->add_control('vnf_show_featured_products', array(
-        'label'    => 'Hiển thị mục Sản phẩm nổi bật',
-        'section'  => 'vnf_featured',
-        'type'     => 'checkbox',
-    ));
-
-    // 8 slot sản phẩm nổi bật
-    $wp_customize->add_setting('vnf_featured_product_1', array(
-        'type'              => 'theme_mod',
-        'transport'         => 'refresh',
-        'sanitize_callback' => 'absint',
-    ));
-    $wp_customize->add_control('vnf_featured_product_1', array(
-        'label'    => 'Sản phẩm nổi bật #1 (ID sản phẩm)',
-        'section'  => 'vnf_featured',
-        'type'     => 'number',
-    ));
-
-    for ($i = 2; $i <= 8; $i++) {
-        $wp_customize->add_setting("vnf_featured_product_$i", array(
-            'type'              => 'theme_mod',
-            'transport'         => 'refresh',
-            'sanitize_callback' => 'absint',
-        ));
-        $wp_customize->add_control("vnf_featured_product_$i", array(
-            'label'    => "Sản phẩm nổi bật #$i (ID sản phẩm)",
-            'section'  => 'vnf_featured',
-            'type'     => 'number',
-        ));
-    }
 }
