@@ -1533,4 +1533,23 @@ function vnf_customize_register($wp_customize) {
             'type'     => 'url',
         ));
     }
+
+    // ── Sản phẩm nổi bật ──
+    $wp_customize->add_section('vnf_featured', array(
+        'title'    => 'Sản phẩm nổi bật (VietFarmy)',
+        'priority' => 30,
+    ));
+
+    $fp1 = 'vnf_featured_product_1'; $fp2 = 'vnf_featured_product_2'; $fp3 = 'vnf_featured_product_3';
+    foreach (array($fp1 => 'Sản phẩm #1', $fp2 => 'Sản phẩm #2', $fp3 => 'Sản phẩm #3') as $key => $label) {
+        $wp_customize->add_setting($key, array('type' => 'theme_mod', 'transport' => 'refresh', 'sanitize_callback' => 'absint'));
+        $wp_customize->add_control($key, array('label' => "$label (ID sản phẩm)", 'section' => 'vnf_featured', 'type' => 'number'));
+    }
+
+    // ── Bài viết nổi bật ──
+    $wp_customize->add_section('vnf_featured_posts', array('title' => 'Bài viết nổi bật (VietFarmy)', 'priority' => 31));
+    foreach (array('vnf_featured_post_1' => 'Bài viết #1', 'vnf_featured_post_2' => 'Bài viết #2', 'vnf_featured_post_3' => 'Bài viết #3') as $key => $label) {
+        $wp_customize->add_setting($key, array('type' => 'theme_mod', 'transport' => 'refresh', 'sanitize_callback' => 'absint'));
+        $wp_customize->add_control($key, array('label' => "$label (ID bài viết)", 'section' => 'vnf_featured_posts', 'type' => 'number'));
+    }
 }
