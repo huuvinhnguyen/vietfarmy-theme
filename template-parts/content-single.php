@@ -34,29 +34,15 @@
 		/* Áp dụng cho MỌI loại featured image (URL custom lẫn upload WordPress) */
 		.post-type-post.singular .entry-featured {
 			float: none !important;
-			max-width: none !important;
+			max-width: 720px !important;
 			position: static !important;
-			margin: 0 0 24px 0 !important;
+			margin: 0 auto 24px auto !important;
 			padding: 0 !important;
 		}
 		.post-type-post.singular .entry-featured img {
 			width: 100%;
 			display: block;
-		}
-		/* Desktop: canh giữa, max-width content */
-		@media (min-width: 900px) {
-			.post-type-post.singular .entry-featured {
-				max-width: 720px;
-				margin-left: auto !important;
-				margin-right: auto !important;
-			}
-		}
-		/* Mobile: full width ra ngoài lề */
-		@media (max-width: 899px) {
-			.post-type-post.singular .entry-featured {
-				margin-left: -30px !important;
-				margin-right: -30px !important;
-			}
+			margin: 0 auto;
 		}
 		/* Bỏ absolutely-positioned layout từ theme Gema */
 		.post-type-post.singular.has-featured-image .post__content {
