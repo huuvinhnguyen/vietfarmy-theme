@@ -132,6 +132,9 @@ function vnf_render_menu_items($menu_raw) {
 .vnf-banner img { width: 100%; height: auto; max-height: 380px; object-fit: cover; display: block; }
 .vnf-banner a { display: block; }
 
+/* Khoảng cách giữa banner và nội dung */
+.vnf-banner-gap { height: 24px; background: #fff; }
+
 /* ── Mobile drawer — mặc định ẩn trên mọi màn hình ── */
 .vnf-overlay { display: none; }
 .vnf-drawer { display: none; }
@@ -210,6 +213,9 @@ function vnf_render_menu_items($menu_raw) {
     /* Banner full width */
     .vnf-banner { margin: 0 !important; padding: 0 !important; }
     .vnf-banner img { width: 100%; max-height: none !important; border-radius: 0 !important; }
+
+    /* Khoảng cách giữa banner và nội dung */
+    .vnf-banner-gap { height: 24px; }
 }
 </style>
 
@@ -247,7 +253,17 @@ function vnf_render_menu_items($menu_raw) {
             <?php endif; ?>
         </div>
     <?php endif; ?>
+
 </div>
+
+<!-- Khoảng cách giữa banner và nội dung -->
+<div class="vnf-banner-gap"></div>
+
+<div id="page" class="site">
+	<a class="skip-link screen-reader-text" href="#content"><?php esc_html_e( 'Skip to content', 'gema' ); ?></a>
+
+	<div id="content" class="site-content">
+
 
 <!-- Mobile Drawer -->
 <div class="vnf-overlay" id="vnf_overlay"></div>
