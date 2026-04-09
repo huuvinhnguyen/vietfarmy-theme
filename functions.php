@@ -1507,4 +1507,30 @@ function vnf_customize_register($wp_customize) {
         'section'     => 'vnf_header',
         'type'        => 'textarea',
     ));
+
+    // ── Social Media ──
+    $wp_customize->add_section('vnf_social', array(
+        'title'    => 'Mạng xã hội (VietFarmy)',
+        'priority' => 35,
+    ));
+
+    $social_fields = array(
+        'vnf_social_facebook'  => 'Facebook URL',
+        'vnf_social_instagram' => 'Instagram URL',
+        'vnf_social_zalo'      => 'Zalo URL',
+        'vnf_social_youtube'   => 'YouTube URL',
+    );
+
+    foreach ($social_fields as $key => $label) {
+        $wp_customize->add_setting($key, array(
+            'type'              => 'theme_mod',
+            'transport'         => 'refresh',
+            'sanitize_callback' => 'esc_url_raw',
+        ));
+        $wp_customize->add_control($key, array(
+            'label'    => $label,
+            'section'  => 'vnf_social',
+            'type'     => 'url',
+        ));
+    }
 }
