@@ -1215,55 +1215,129 @@ function gema_wupdates_add_id_ML4Gm( $ids = array() ) {
 add_filter( 'wupdates_gather_ids', 'gema_wupdates_add_id_ML4Gm', 10, 1 );
 
 // ============================================================
-// OPEN GRAPH META TAGS — Facebook / Messenger Share
+// OPEN GRAPH META TAGS — Facebook / Messenger / Zalo Share
 // ============================================================
-add_action('wp_head', 'vnf_open_graph_meta');
+add_action('wp_head', 'vnf_open_graph_meta', 1);
 
 function vnf_open_graph_meta() {
-    if (!is_singular()) return;
+    if (!is_singular() && !is_front_page()) return;
 
     global $post;
-    if (!$post) return;
+    $post_id = 0;
 
-    $title = get_the_title() . ' — ' . get_bloginfo('name');
-    $url = get_permalink();
-
-    // Ưu tiên: Ảnh từ URL custom → Featured Image → Logo
-    $image = '';
-    $post_image_url = get_post_meta($post->ID, '_vnf_post_image_url', true);
-    if (!empty($post_image_url)) {
-        $image = $post_image_url;
-    } elseif (has_post_thumbnail()) {
-        $image = get_the_post_thumbnail_url($post->ID, 'large');
+    if (is_singular() && !empty($post)) {
+        $post_id = $post->ID;
+    } elseif (is_front_page()) {
+        $blog_page = get_option('page_for_posts');
+        $post_id = $blog_page ? $blog_page : 0;
     }
 
-    // Fallback: logo từ customizer
+    // --- Homepage không có blog page ---
+    if (!$post_id) {
+        if (!is_front_page()) return;
+
+        $logo = get_theme_mod('vnf_header_logo', '');
+        echo "\n";
+        echo '<meta property="og:type" content="website" />' . "\n";
+        echo '<meta property="og:title" content="' . esc_attr(get_bloginfo('name')) . '" />' . "\n";
+        echo '<meta property="og:url" content="' . esc_url(home_url('/')) . '" />' . "\n";
+        echo '<meta property="og:site_name" content="' . esc_attr(get_bloginfo('name')) . '" />' . "\n";
+        echo '<meta property="og:description" content="' . esc_attr(wp_strip_all_tags(get_bloginfo('description'))) . '" />' . "\n";
+        if ($logo) {
+            echo '<meta property="og:image" content="' . esc_url($logo) . '" />' . "\n";
+        }
+        echo '<meta name="twitter:card" content="summary_large_image" />' . "\n";
+        return;
+    }
+
+    // --- TITLE & URL ---
+    $title = get_the_title($post_id) . ' — ' . get_bloginfo('name');
+    $url   = get_permalink($post_id);
+
+    // --- IMAGE: 4 bước ưu tiên ---
+    $image = '';
+
+    // 1. Custom URL meta (_vnf_post_image_url)
+    $custom_url = get_post_meta($post_id, '_vnf_post_image_url', true);
+    if (!empty(trim($custom_url))) {
+        $image = trim($custom_url);
+    }
+
+    // 2. Featured Image upload lên WordPress
+    if (empty($image) && has_post_thumbnail($post_id)) {
+        $thumb_url = wp_get_attachment_image_src(get_post_thumbnail_id($post_id), 'large');
+        if (!empty($thumb_url[0])) {
+            $image = $thumb_url[0];
+        }
+    }
+
+    // 3. First image trong content — QUAN TRỌNG NHẤT cho site này
+    if (empty($image)) {
+        $content = get_post_field('post_content', $post_id);
+        if (!empty($content)) {
+            preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $matches);
+            foreach ((array) $matches[1] as $img_src) {
+                $img_lower = strtolower($img_src);
+                // Bỏ qua ảnh nhỏ, logo, icon, tracking
+                if (
+                    strpos($img_lower, 'logo') === false &&
+                    strpos($img_lower, 'icon') === false &&
+                    strpos($img_lower, 'pixel') === false &&
+                    strpos($img_lower, 'tracking') === false &&
+                    strpos($img_lower, '.gif') === false &&
+                    strlen($img_src) > 20
+                ) {
+                    // Loại bỏ query string resize/cdn
+                    $clean = preg_replace('/[?&](w=|h=|resize=|ssl=).*$/', '', $img_src);
+                    $image = $clean;
+                    break;
+                }
+            }
+        }
+    }
+
+    // 4. Fallback: logo
     if (empty($image)) {
         $logo_url = get_theme_mod('vnf_header_logo', '');
-        if ($logo_url) $image = $logo_url;
+        if (!empty($logo_url)) $image = $logo_url;
     }
 
-    $description = get_the_excerpt();
-    if (empty($description)) {
-        $description = get_bloginfo('description');
+    // --- DESCRIPTION ---
+    $desc = get_the_excerpt($post_id);
+    if (empty(trim($desc))) {
+        $raw = get_post_field('post_content', $post_id);
+        $raw = wp_strip_all_tags($raw);
+        $raw = preg_replace('/\s+/', ' ', $raw);
+        $desc = mb_substr($raw, 0, 160);
     }
+    $desc = wp_strip_all_tags($desc);
 
-    $site_name = get_bloginfo('name');
+    // --- HTTPS cho og:image ---
+    $image_secure = str_replace('http://', 'https://', $image);
 
-    echo "\n<!-- VietFarmy Open Graph -->\n";
+    echo "\n";
     echo '<meta property="og:type" content="article" />' . "\n";
     echo '<meta property="og:title" content="' . esc_attr($title) . '" />' . "\n";
     echo '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
-    echo '<meta property="og:site_name" content="' . esc_attr($site_name) . '" />' . "\n";
-    if ($description) {
-        echo '<meta property="og:description" content="' . esc_attr(wp_strip_all_tags($description)) . '" />' . "\n";
+    echo '<meta property="og:site_name" content="' . esc_attr(get_bloginfo('name')) . '" />' . "\n";
+    if ($desc) {
+        echo '<meta property="og:description" content="' . esc_attr($desc) . '" />' . "\n";
     }
     if ($image) {
         echo '<meta property="og:image" content="' . esc_url($image) . '" />' . "\n";
-        echo '<meta property="og:image:secure_url" content="' . esc_url($image) . '" />' . "\n";
+        echo '<meta property="og:image:secure_url" content="' . esc_url($image_secure) . '" />' . "\n";
+        echo '<meta property="og:image:width" content="1200" />' . "\n";
+        echo '<meta property="og:image:height" content="630" />' . "\n";
     }
     echo '<meta name="twitter:card" content="summary_large_image" />' . "\n";
-    echo '<!-- End VietFarmy Open Graph -->' . "\n";
+    if ($image) {
+        echo '<meta name="twitter:image" content="' . esc_url($image) . '" />' . "\n";
+    }
+    echo '<meta name="twitter:title" content="' . esc_attr($title) . '" />' . "\n";
+    if ($desc) {
+        echo '<meta name="twitter:description" content="' . esc_attr($desc) . '" />' . "\n";
+    }
+    echo "\n";
 }
 
 /**
