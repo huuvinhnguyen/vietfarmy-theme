@@ -22,6 +22,9 @@ for ($i = 1; $i <= 3; $i++) {
 }
 ?>
 
+<!-- QUY TRÌNH FARM ĐẾN LY -->
+<?php echo do_shortcode('[vnf_process]'); ?>
+
 <!-- SẢN PHẨM NỔI BẬT -->
 <section class="vnf-section">
     <div class="vnf-inner">
@@ -180,7 +183,5 @@ for ($i = 1; $i <= 3; $i++) {
     .vnf-section { padding: 32px 0; }
 }
 </style>
-
-<?php echo do_shortcode("[vnf_process]"); ?>
 
 <?php get_footer(); ?>
