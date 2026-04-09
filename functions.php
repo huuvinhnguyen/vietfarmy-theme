@@ -174,6 +174,42 @@ function vietfarmy_admin_image_column_css() {
     </style>';
 }
 
+// Fix layout trang Posts (admin list) — ngăn text bị co nhỏ
+// -----------------------------------------------
+add_action('admin_head', 'vnf_admin_posts_layout_fix');
+
+function vnf_admin_posts_layout_fix() {
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'edit-post') return;
+    echo '<style>
+        /* Ngăn các cột bị co nhỏ do SEO plugin column */
+        .wp-list-table th.column-author,
+        .wp-list-table th.column-categories,
+        .wp-list-table th.column-tags,
+        .wp-list-table th.column-statistics,
+        .wp-list-table th.column-comments {
+            white-space: nowrap;
+            width: auto;
+            min-width: 80px;
+        }
+        .wp-list-table td.column-author .author-name {
+            white-space: nowrap;
+        }
+        /* SEO Details column — giới hạn chiều rộng */
+        .wp-list-table th.column-seo_details,
+        .wp-list-table td.column-seo_details {
+            max-width: 200px;
+            overflow: hidden;
+        }
+        /* Ngăn post title bị co */
+        .wp-list-table .row-title {
+            white-space: normal !important;
+            max-width: 300px;
+            display: inline-block;
+        }
+    </style>';
+}
+
 // 4. Hiển thị ảnh từ URL — Trang danh sách (shop/archive)
 // Chạy ở priority 9, thấp hơn default 10, nên in TRƯỚC ảnh mặc định
 // -----------------------------------------------
