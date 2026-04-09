@@ -1213,6 +1213,59 @@ function gema_wupdates_add_id_ML4Gm( $ids = array() ) {
 	return $ids;
 }
 add_filter( 'wupdates_gather_ids', 'gema_wupdates_add_id_ML4Gm', 10, 1 );
+
+// ============================================================
+// OPEN GRAPH META TAGS — Facebook / Messenger Share
+// ============================================================
+add_action('wp_head', 'vnf_open_graph_meta');
+
+function vnf_open_graph_meta() {
+    if (!is_singular()) return;
+
+    global $post;
+    if (!$post) return;
+
+    $title = get_the_title() . ' — ' . get_bloginfo('name');
+    $url = get_permalink();
+
+    // Ưu tiên: Ảnh từ URL custom → Featured Image → Logo
+    $image = '';
+    $post_image_url = get_post_meta($post->ID, '_vnf_post_image_url', true);
+    if (!empty($post_image_url)) {
+        $image = $post_image_url;
+    } elseif (has_post_thumbnail()) {
+        $image = get_the_post_thumbnail_url($post->ID, 'large');
+    }
+
+    // Fallback: logo từ customizer
+    if (empty($image)) {
+        $logo_url = get_theme_mod('vnf_header_logo', '');
+        if ($logo_url) $image = $logo_url;
+    }
+
+    $description = get_the_excerpt();
+    if (empty($description)) {
+        $description = get_bloginfo('description');
+    }
+
+    $site_name = get_bloginfo('name');
+
+    echo "\n<!-- VietFarmy Open Graph -->\n";
+    echo '<meta property="og:type" content="article" />' . "\n";
+    echo '<meta property="og:title" content="' . esc_attr($title) . '" />' . "\n";
+    echo '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
+    echo '<meta property="og:site_name" content="' . esc_attr($site_name) . '" />' . "\n";
+    if ($description) {
+        echo '<meta property="og:description" content="' . esc_attr(wp_strip_all_tags($description)) . '" />' . "\n";
+    }
+    if ($image) {
+        echo '<meta property="og:image" content="' . esc_url($image) . '" />' . "\n";
+        echo '<meta property="og:image:secure_url" content="' . esc_url($image) . '" />' . "\n";
+    }
+    echo '<meta name="twitter:card" content="summary_large_image" />' . "\n";
+    echo '<!-- End VietFarmy Open Graph -->' . "\n";
+}
+
 /**
 * Various plugins integrations.
 */
