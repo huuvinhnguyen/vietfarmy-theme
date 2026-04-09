@@ -181,4 +181,6 @@ for ($i = 1; $i <= 3; $i++) {
 }
 </style>
 
+<?php echo do_shortcode("[vnf_process]"); ?>
+
 <?php get_footer(); ?>
