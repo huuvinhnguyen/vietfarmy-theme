@@ -25,11 +25,16 @@ function gema_body_classes( $classes ) {
 	if ( is_singular() ) {
 		$classes[] = 'singular';
 
-		//add a dedicated class for the presence of a featured image
-		if ( has_post_thumbnail() ) {
-			$classes[] = 'has-featured-image';
-		} else {
-			$classes[] = 'no-featured-image';
+		//add a dedicated class for the presence of a featured image (hỗ trợ cả ảnh từ URL)
+		//Chỉ áp dụng cho blog posts, KHÔNG ảnh hưởng WooCommerce product
+		if ( get_post_type() === 'post' ) {
+			$post_id = get_queried_object_id();
+			$url_image = get_post_meta( $post_id, '_vnf_post_image_url', true );
+			if ( has_post_thumbnail() || ! empty( $url_image ) ) {
+				$classes[] = 'has-featured-image';
+			} else {
+				$classes[] = 'no-featured-image';
+			}
 		}
 
 	} else {
@@ -104,7 +109,14 @@ function gema_post_classes( $classes ) {
         }
 
 	} else {
-		$classes[] = 'entry-image--' . gema_get_post_thumbnail_aspect_ratio_class();
+		// Single post: ưu tiên ảnh từ URL → featured image mặc định
+		$post_id = isset( $post->ID ) ? $post->ID : get_queried_object_id();
+		$url_image = get_post_meta( $post_id, '_vnf_post_image_url', true );
+		if ( ! empty( $url_image ) ) {
+			$classes[] = 'entry-image--landscape';
+		} else {
+			$classes[] = 'entry-image--' . gema_get_post_thumbnail_aspect_ratio_class();
+		}
 	}
 
 	return $classes;
