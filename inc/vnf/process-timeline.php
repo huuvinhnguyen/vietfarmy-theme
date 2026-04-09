@@ -1,7 +1,10 @@
 <?php
-// ============================================================
-// PROCESS TIMELINE SHORTCODE — [vnf_process]
-// ============================================================
+/**
+ * VietFarmy Process Timeline — Shortcode + Customizer
+ * [vnf_process]
+ */
+
+// ── SHORTCODE ──────────────────────────────────────────────
 add_shortcode('vnf_process', 'vnf_process_shortcode');
 
 function vnf_process_shortcode($atts) {
@@ -33,11 +36,11 @@ function vnf_process_shortcode($atts) {
             <div class="vnf-timeline">
                 <?php for ($i = 0; $i < 4; $i++):
                     $step = $steps[$i];
-                    $def = $defaults[$i + 1];
+                    $def  = $defaults[$i + 1];
                     $title = !empty($step['title']) ? $step['title'] : $def['title'];
                     $image = !empty($step['image']) ? $step['image'] : '';
                     $video = !empty($step['video']) ? $step['video'] : '';
-                    $desc = !empty($step['description']) ? $step['description'] : $def['desc'];
+                    $desc  = !empty($step['description']) ? $step['description'] : $def['desc'];
                 ?>
                     <div class="vnf-timeline-step">
                         <div class="vnf-step-number"><?php echo $i + 1; ?></div>
@@ -93,8 +96,10 @@ function vnf_process_shortcode($atts) {
     return ob_get_clean();
 }
 
-// ── Customizer: Process Timeline ──
-add_action('customize_register', function($wp_customize) {
+// ── CUSTOMIZER ────────────────────────────────────────────
+add_action('customize_register', 'vnf_process_customizer');
+
+function vnf_process_customizer($wp_customize) {
     $wp_customize->add_section('vnf_process', array(
         'title'    => 'Quy trình Farm đến Ly (VietFarmy)',
         'priority' => 32,
@@ -108,21 +113,42 @@ add_action('customize_register', function($wp_customize) {
     );
 
     foreach ($process_fields as $num => $label) {
-        $wp_customize->add_setting("vnf_process_title_$num", array('type' => 'theme_mod', 'transport' => 'refresh'));
+        // Tiêu đề
+        $wp_customize->add_setting("vnf_process_title_$num", array(
+            'type' => 'theme_mod', 'transport' => 'refresh',
+        ));
         $wp_customize->add_control("vnf_process_title_$num", array(
-            'label' => "$label — Tiêu đề", 'section' => 'vnf_process', 'type' => 'text',
+            'label' => "$label — Tiêu đề",
+            'section' => 'vnf_process', 'type' => 'text',
         ));
-        $wp_customize->add_setting("vnf_process_image_$num", array('type' => 'theme_mod', 'transport' => 'refresh', 'sanitize_callback' => 'esc_url_raw'));
+
+        // URL Hình ảnh
+        $wp_customize->add_setting("vnf_process_image_$num", array(
+            'type' => 'theme_mod', 'transport' => 'refresh',
+            'sanitize_callback' => 'esc_url_raw',
+        ));
         $wp_customize->add_control("vnf_process_image_$num", array(
-            'label' => "$label — URL Hình ảnh", 'section' => 'vnf_process', 'type' => 'url',
+            'label' => "$label — URL Hình ảnh",
+            'section' => 'vnf_process', 'type' => 'url',
         ));
-        $wp_customize->add_setting("vnf_process_video_$num", array('type' => 'theme_mod', 'transport' => 'refresh', 'sanitize_callback' => 'esc_url_raw'));
+
+        // URL Video
+        $wp_customize->add_setting("vnf_process_video_$num", array(
+            'type' => 'theme_mod', 'transport' => 'refresh',
+            'sanitize_callback' => 'esc_url_raw',
+        ));
         $wp_customize->add_control("vnf_process_video_$num", array(
-            'label' => "$label — Video URL (mp4)", 'section' => 'vnf_process', 'type' => 'url',
+            'label' => "$label — Video URL (mp4)",
+            'section' => 'vnf_process', 'type' => 'url',
         ));
-        $wp_customize->add_setting("vnf_process_desc_$num", array('type' => 'theme_mod', 'transport' => 'refresh'));
+
+        // Mô tả
+        $wp_customize->add_setting("vnf_process_desc_$num", array(
+            'type' => 'theme_mod', 'transport' => 'refresh',
+        ));
         $wp_customize->add_control("vnf_process_desc_$num", array(
-            'label' => "$label — Mô tả", 'section' => 'vnf_process', 'type' => 'textarea',
+            'label' => "$label — Mô tả",
+            'section' => 'vnf_process', 'type' => 'textarea',
         ));
     }
-})
+}
