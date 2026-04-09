@@ -30,24 +30,38 @@
 			?>
 		</div>
 		<style>
-		/* Fix layout khi dùng ảnh từ URL custom — bỏ float/absolute positioning */
-		/* Chỉ áp dụng cho blog posts (post-type-post), KHÔNG ảnh hưởng WooCommerce */
-		.post-type-post.singular .entry-featured.vnf-url-featured {
+		/* Fix layout ảnh featured cho blog posts — bỏ float/absolute positioning */
+		/* Áp dụng cho MỌI loại featured image (URL custom lẫn upload WordPress) */
+		.post-type-post.singular .entry-featured {
 			float: none !important;
 			max-width: none !important;
 			position: static !important;
-			margin: 0 !important;
+			margin: 0 0 24px 0 !important;
 			padding: 0 !important;
 		}
-		.post-type-post.singular .entry-featured.vnf-url-featured img {
+		.post-type-post.singular .entry-featured img {
 			width: 100%;
 			display: block;
 		}
+		/* Desktop: canh giữa, max-width content */
+		@media (min-width: 900px) {
+			.post-type-post.singular .entry-featured {
+				max-width: 720px;
+				margin-left: auto !important;
+				margin-right: auto !important;
+			}
+		}
+		/* Mobile: full width ra ngoài lề */
 		@media (max-width: 899px) {
-			.post-type-post.singular .entry-featured.vnf-url-featured {
+			.post-type-post.singular .entry-featured {
 				margin-left: -30px !important;
 				margin-right: -30px !important;
 			}
+		}
+		/* Bỏ absolutely-positioned layout từ theme Gema */
+		.post-type-post.singular.has-featured-image .post__content {
+			clear: both;
+			padding-top: 0 !important;
 		}
 		</style>
 
