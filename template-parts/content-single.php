@@ -37,7 +37,7 @@
 	<div class="entry-header">
 		<?php the_title('<h1 class="entry-title"><span>', '</span></h1>'); ?>
 
-		<div class="entry-meta">
+		<div class="entry-meta" style="display:none;">
 			<?php gema_cats_list(); ?>
 			<?php gema_posted_on(); ?>
 			<?php
