@@ -29,34 +29,9 @@
 			}
 			?>
 		</div>
-		<style>
-		/* Fix layout ảnh featured cho blog posts — bỏ float/absolute positioning */
-		/* Áp dụng cho MỌI loại featured image (URL custom lẫn upload WordPress) */
-		.post-type-post.singular .entry-featured {
-			float: none !important;
-			max-width: 720px !important;
-			position: static !important;
-			margin: 0 auto 24px auto !important;
-			padding: 0 !important;
-		}
-		.post-type-post.singular .entry-featured img {
-			width: 100%;
-			display: block;
-			margin: 0 auto;
-		}
-		/* Bỏ absolutely-positioned layout từ theme Gema */
-		.post-type-post.singular.has-featured-image .post__content {
-			clear: both;
-			padding-top: 0 !important;
-		}
-		</style>
 
 	<?php else : ?>
-		<style>
-		/* Fix khoảng trắng lớn khi không có ảnh đại diện */
-		.singular .entry-featured { display: none !important; }
-		</style>
-
+		<!-- Ẩn khoảng trắng khi không có ảnh đại diện — CSS nằm trong wp_head -->
 	<?php endif; ?>
 
 	<div class="entry-header">

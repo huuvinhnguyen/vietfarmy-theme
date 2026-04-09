@@ -1219,6 +1219,48 @@ add_filter( 'wupdates_gather_ids', 'gema_wupdates_add_id_ML4Gm', 10, 1 );
 // ============================================================
 add_action('wp_head', 'vnf_open_graph_meta', 1);
 
+// ============================================================
+// CSS FIX — POST DETAIL LAYOUT (Featured Image canh giữa)
+// ============================================================
+add_action('wp_head', 'vnf_post_detail_css', 1);
+
+function vnf_post_detail_css() {
+    if (!is_singular('post')) return;
+    echo '<style>
+    /* Fix layout ảnh featured — canh giữa */
+    .post-type-post.singular .entry-featured {
+        float: none !important;
+        max-width: 720px !important;
+        width: 100% !important;
+        position: static !important;
+        margin: 0 auto 24px auto !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+    .post-type-post.singular .entry-featured img,
+    .post-type-post.singular .entry-featured .vnf-single-img {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: block !important;
+        height: auto !important;
+    }
+    /* Bỏ absolutely-positioned từ theme Gema */
+    .post-type-post.singular.has-featured-image .post__content {
+        clear: both !important;
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+    .post-type-post.singular.has-featured-image .entry-header {
+        position: static !important;
+        padding-top: 0 !important;
+    }
+    /* Ẩn khoảng trắng khi không có ảnh */
+    .post-type-post.singular.no-featured-image .entry-featured {
+        display: none !important;
+    }
+    </style>';
+}
+
 function vnf_open_graph_meta() {
     if (!is_singular() && !is_front_page()) return;
 
