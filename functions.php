@@ -1668,9 +1668,9 @@ add_action('customize_register', function($wp_customize) {
             'label' => "$label — Tiêu đề", 'section' => 'vnf_process', 'type' => 'text',
         ));
         $wp_customize->add_setting("vnf_process_image_$num", array('type' => 'theme_mod', 'transport' => 'refresh', 'sanitize_callback' => 'esc_url_raw'));
-        $wp_customize->add_control(new WP_Customize_Image_Control($wp_customize, "vnf_process_image_$num", array(
-            'label' => "$label — Hình ảnh", 'section' => 'vnf_process',
-        )));
+        $wp_customize->add_control("vnf_process_image_$num", array(
+            'label' => "$label — URL Hình ảnh", 'section' => 'vnf_process', 'type' => 'url',
+        ));
         $wp_customize->add_setting("vnf_process_video_$num", array('type' => 'theme_mod', 'transport' => 'refresh', 'sanitize_callback' => 'esc_url_raw'));
         $wp_customize->add_control("vnf_process_video_$num", array(
             'label' => "$label — Video URL (mp4)", 'section' => 'vnf_process', 'type' => 'url',
