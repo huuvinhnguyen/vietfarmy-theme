@@ -1294,13 +1294,7 @@ function vnf_post_detail_css() {
     .post-type-post.singular.no-featured-image .entry-featured {
         display: none !important;
     }
-    
-    /* Ẩn meta info — Blog by VietFarmy */
-    .card__meta.entry-meta,
-    .entry-meta {
-        display: none !important;
-    }
-</style>';
+    </style>';
 }
 
 function vnf_open_graph_meta() {
