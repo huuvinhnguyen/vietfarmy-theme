@@ -7,6 +7,9 @@
 
 get_header();
 
+// SLIDESHOW — banner trang chủ
+echo do_shortcode('[vnf_slideshow id="1"]');
+
 // Lấy ID sản phẩm nổi bật (3 sản phẩm)
 $product_ids = array();
 for ($i = 1; $i <= 3; $i++) {
